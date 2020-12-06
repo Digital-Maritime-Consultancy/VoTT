@@ -96,7 +96,6 @@ describe("CSV Format Export Provider", () => {
                         },
                     ],
                     segments: [],
-                    metadata: { fileName: "" },
                     version: appInfo.version,
                 };
 

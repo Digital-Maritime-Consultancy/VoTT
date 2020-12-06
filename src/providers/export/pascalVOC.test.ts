@@ -81,7 +81,6 @@ describe("PascalVOC Json Export Provider", () => {
                     asset,
                     regions: [mockRegion1, mockRegion2],
                     segments: [mockSegment1, mockSegment2],
-                    metadata: { fileName: "" },
                     version: appInfo.version,
                 };
 

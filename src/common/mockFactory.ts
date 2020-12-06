@@ -320,7 +320,6 @@ export default class MockFactory {
             asset: asset || MockFactory.createTestAsset(),
             regions: regions || [],
             segments: segments || [],
-            metadata: metadata || {fileName: ""},
             version: appInfo.version,
             segmentationData: segmentationData || MockFactory.createTestAsset("string-seg",AssetState.NotVisited, "", AssetType.SegmentationData),
         };
@@ -922,7 +921,9 @@ export default class MockFactory {
             deleteProject: jest.fn(() => Promise.resolve()),
             closeProject: jest.fn(() => Promise.resolve()),
             loadAssets: jest.fn(() => Promise.resolve()),
-            loadMetadata: jest.fn(() => Promise.resolve()),
+            loadSegmentationData: jest.fn(() => Promise.resolve()),
+            loadImageMetadata: jest.fn(() => Promise.resolve()),
+            saveImageMetadata: jest.fn(() => Promise.resolve()),
             exportProject: jest.fn(() => Promise.resolve()),
             loadAssetMetadata: jest.fn(() => Promise.resolve()),
             saveAssetMetadata: jest.fn(() => Promise.resolve()),

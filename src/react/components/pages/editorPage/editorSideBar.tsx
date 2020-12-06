@@ -146,6 +146,13 @@ export default class EditorSideBar extends React.Component<IEditorSideBarProps, 
                         <i className="fas fa-eye"></i>
                     </span>
                 );
+            case AssetState.Incompleted:
+                return (
+                    <span title={strings.editorPage.incompleted}
+                        className="badge badge-incompleted">
+                        <i className="fas fa-exclamation"></i>
+                    </span>
+                );
             default:
                 return null;
         }

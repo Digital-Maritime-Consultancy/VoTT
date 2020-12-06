@@ -188,7 +188,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     public render = () => {
         const className = this.state.enabled ? "canvas-enabled" : "canvas-disabled";
-        return (
+        return ( 
             <Fragment>
                 <Confirm title={strings.editorPage.canvas.removeAllSegments.title}
                     ref={this.clearConfirm as any}

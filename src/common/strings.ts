@@ -227,6 +227,7 @@ export interface IAppStrings {
         height: string;
         tagged: string;
         visited: string;
+        incompleted: string;
         segmentAnnotated: string;
         metadataEdited: string;
         toolbar: {

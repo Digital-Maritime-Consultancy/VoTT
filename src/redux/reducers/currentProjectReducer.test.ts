@@ -108,7 +108,6 @@ describe("Current Project Reducer", () => {
             },
             regions: [],
             segments: [],
-            metadata: { fileName: "" },
             version: "",
         };
 

@@ -181,7 +181,6 @@ describe("Azure Custom Vision Export Provider", () => {
                     asset,
                     regions: asset.state[EditorContext.Geometry] === AssetState.Tagged ? regions : [],
                     segments: [],
-                    metadata: { fileName: "" },
                     version: appInfo.version,
                 });
             });

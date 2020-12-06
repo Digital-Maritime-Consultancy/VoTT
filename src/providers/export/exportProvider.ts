@@ -78,7 +78,6 @@ export abstract class ExportProvider
             if (context === null || context === undefined){
                 assetStates.map( (assetState) => predicates.push(asset.state[EditorContext.Geometry] === assetState));
                 assetStates.map( (assetState) => predicates.push(asset.state[EditorContext.Segment] === assetState));
-                assetStates.map( (assetState) => predicates.push(asset.state[EditorContext.Metadata] === assetState));
             } else {
                 assetStates.map( (assetState) => predicates.push(asset.state[context] === assetState));
             }

@@ -102,7 +102,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             id: region.id,
             image_id: asset.id,
             category_id: region.tag,
-            type: region.type === RegionType.Rectangle ? "boundingbox" : 
+            type: region.type === RegionType.Rectangle ? "boundingbox" :
                     region.type === RegionType.Polygon ? "polygon" :
                     region.type === RegionType.Polyline ? "polyline" :
                     "etc",

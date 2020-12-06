@@ -224,6 +224,7 @@ export const english: IAppStrings = {
         height: "Height",
         tagged: "Tagged",
         visited: "Visited",
+        incompleted: "Incompleted",
         segmentAnnotated: "Segment annotated",
         metadataEdited: "Metadata edited",
         toolbar: {

@@ -4,7 +4,7 @@ import * as shortid from "shortid";
 import Guard from "../common/guard";
 import {
     IAsset, AssetType, IProject, IAssetMetadata, AssetState,
-    IRegion, RegionType, ITFRecordMetadata, EditorContext, ISegment,
+    IRegion, RegionType, ITFRecordMetadata, EditorContext, ISegment, IImageMetadata,
 } from "../models/applicationState";
 import { AssetProviderFactory, IAssetProvider } from "../providers/storage/assetProviderFactory";
 import { StorageProviderFactory, IStorageProvider } from "../providers/storage/storageProviderFactory";
@@ -14,123 +14,37 @@ import { TFRecordsReader } from "../providers/export/tensorFlowRecords/tensorFlo
 import { FeatureType } from "../providers/export/tensorFlowRecords/tensorFlowBuilder";
 import { appInfo } from "../common/appInfo";
 import { encodeFileURI } from "../common/utils";
+import { load } from "snapsvg";
+
+
+export enum ImageMetadataType {
+    Unknown = 0,
+    ImageMetadata = 1,
+}
 
 /**
- * @name - Asset Service
- * @description - Functions for dealing with project assets
+ * @name - Image Metadata Service
+ * @description - Functions for dealing with Image Metadata
  */
-export class AssetService {
-
-    /**
-     * Create IAsset from filePath
-     * @param assetFilePath - filepath of asset
-     * @param assetFileName - name of asset
-     */
-    public static createAssetFromFilePath(
-        assetFilePath: string,
-        assetFileName?: string,
-        assetIdentifier?: string): IAsset {
-    Guard.empty(assetFilePath);
-    const normalizedPath = assetFilePath.toLowerCase();
-
-    // If the path is not already prefixed with a protocol
-    // then assume it comes from the local file system
-    if (!normalizedPath.startsWith("http://") &&
-        !normalizedPath.startsWith("https://") &&
-        !normalizedPath.startsWith("file:")) {
-        // First replace \ character with / the do the standard url encoding then encode unsupported characters
-        assetFilePath = encodeFileURI(assetFilePath, true);
-    }
-
-    const md5Hash = new MD5().update(assetIdentifier).digest("hex");
-    const pathParts = assetFilePath.split(/[\\\/]/);
-    // Example filename: video.mp4#t=5
-    // fileNameParts[0] = "video"
-    // fileNameParts[1] = "mp4"
-    // fileNameParts[2] = "t=5"
-    assetFileName = assetFileName || pathParts[pathParts.length - 1];
-    const fileNameParts = assetFileName.split(".");
-    const extensionParts = fileNameParts[fileNameParts.length - 1].split(/[\?#]/);
-    const assetFormat = extensionParts[0];
-
-    const assetType = this.getAssetType(assetFormat);
-    return {
-        id: md5Hash,
-        format: assetFormat,
-        state: { [EditorContext.Geometry]: AssetState.NotVisited, [EditorContext.Segment]: AssetState.NotVisited, [EditorContext.Metadata]: AssetState.NotVisited, },
-        type: assetType,
-        name: assetFileName,
-        path: assetFilePath,
-        size: null,
-    };
-    }
+export class ImageMetadataService {
 
     /**
      * Get Asset Type from format (file extension)
      * @param format - File extension of asset
      */
-    public static getAssetType(format: string): AssetType {
+    public static getImageMetadataType(format: string): ImageMetadataType {
         switch (format.toLowerCase()) {
-            case "gif":
-            case "jpg":
-            case "jpeg":
-            case "tif":
-            case "tiff":
-            case "png":
-            case "bmp":
-                return AssetType.Image;
-            case "mp4":
-            case "mov":
-            case "avi":
-            case "m4v":
-            case "mpg":
-            case "wmv":
-                return AssetType.Video;
-            case "tfrecord":
-                return AssetType.TFRecord;
-            case "seg":
-                return AssetType.SegmentationData;
             case "json":
-                return AssetType.ImageMetadata;
+                return ImageMetadataType.ImageMetadata;
             default:
-                return AssetType.Unknown;
+                return ImageMetadataType.Unknown;
         }
     }
 
-    private assetProviderInstance: IAssetProvider;
-    private segmentationDataProviderInstance: IAssetProvider;
     private storageProviderInstance: IStorageProvider;
 
     constructor(private project: IProject) {
         Guard.null(project);
-    }
-
-    /**
-     * Get Asset Provider from project's source connction
-     */
-    protected get assetProvider(): IAssetProvider {
-        if (!this.assetProviderInstance) {
-            this.assetProviderInstance = AssetProviderFactory.create(
-                this.project.sourceConnection.providerType,
-                this.project.sourceConnection.providerOptions,
-            );
-
-            return this.assetProviderInstance;
-        }
-    }
-
-    /**
-     * Get Asset Provider from project's source connction
-     */
-    protected get segmentationDataProvider(): IAssetProvider {
-        if (!this.segmentationDataProviderInstance) {
-            this.segmentationDataProviderInstance = AssetProviderFactory.create(
-                this.project.metadataConnection.providerType,
-                this.project.metadataConnection.providerOptions,
-            );
-
-            return this.segmentationDataProviderInstance;
-        }
     }
 
     /**
@@ -139,25 +53,26 @@ export class AssetService {
     protected get storageProvider(): IStorageProvider {
         if (!this.storageProviderInstance) {
             this.storageProviderInstance = StorageProviderFactory.create(
-                this.project.targetConnection.providerType,
-                this.project.targetConnection.providerOptions,
+                this.project.metadataConnection.providerType,
+                this.project.metadataConnection.providerOptions,
             );
         }
-        return this.storageProviderInstance;
-    }
 
-    /**
-     * Get assets from provider
-     */
-    public async getAssets(): Promise<IAsset[]> {
-        return await this.assetProvider.getAssets();
+        return this.storageProviderInstance;
     }
 
     /**
      * Get segmentation data from provider
      */
-    public async getSegmentationData(): Promise<IAsset[]> {
-        return await this.segmentationDataProvider.getAssets();
+    public async loadImageMetadata(fileName: string): Promise<object> {
+        const filePath = `${fileName}`;
+        const loadedData = await this.storageProvider.readText(filePath);
+        return JSON.parse(loadedData);
+    }
+
+    public async saveImageMetadata(fileName: string, content: object): Promise<void> {
+        const filePath = `${fileName}`;
+        return await this.storageProvider.writeText(filePath, JSON.stringify(content, null, 4));
     }
 
     /**
