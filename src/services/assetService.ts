@@ -221,7 +221,6 @@ export class AssetService {
                     asset: { ...asset },
                     regions: await this.getRegionsFromTFRecord(asset),
                     segments: await this.getSegmentsFromTFRecord(asset),
-                    metadata: { fileName: "" },
                     segmentationData: undefined,
                     version: appInfo.version,
                 };
@@ -230,7 +229,6 @@ export class AssetService {
                     asset: { ...asset },
                     regions: [],
                     segments: [],
-                    metadata: { fileName: "" },
                     segmentationData: undefined,
                     version: appInfo.version,
                 };

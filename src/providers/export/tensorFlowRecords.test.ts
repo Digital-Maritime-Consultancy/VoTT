@@ -95,7 +95,6 @@ describe("TFRecords Json Export Provider", () => {
                     asset,
                     regions: [mockRegion],
                     segments: [],
-                    metadata: { fileName: "" },
                     version: appInfo.version,
                 };
 

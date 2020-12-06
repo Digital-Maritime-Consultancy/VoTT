@@ -31,7 +31,7 @@ import Alert from "../../../common/alert/alert";
 import Confirm from "../../../common/confirm/confirm";
 import { ActiveLearningService } from "../../../../../services/activeLearningService";
 import { toast } from "react-toastify";
-import Form from "react-jsonschema-form";
+import Form, { IChangeEvent } from "react-jsonschema-form";
 import CustomFieldTemplate from "../../../common/customField/customFieldTemplate";
 import Preview from "./preview";
 import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps, SegmentSelectionMode } from '../editorPage';
@@ -54,24 +54,63 @@ const formSchema = addLocValues(require("./imageAnnotationForm.json"));
 // tslint:disable-next-line:no-var-requires
 const uiSchema = addLocValues(require("./imageAnnotationForm.ui.json"));
 
+const defaultFormData = {
+    id: "",
+    file_name: "",
+    frame_number: 0,
+    date_captured: "",
+    source_video_id: 0,
+    included_classes_list: [],
+    labeling_object_list: [],
+    port: "",
+    latitude: "",
+    longitude: "",
+    season: "winter",
+    weather: "sunny",
+    wave_height: 0,
+    wind_speed: 0,
+    visible_distance: 0,
+    width: 0,
+    height: 0,
+    date_created: "",
+    date_updated: "",
+    license: 1,
+}
+
+export interface IEditorMetadataPageState {
+    /** Array of assets in project */
+    assets: IAsset[];
+    /** The selected asset for the primary editing experience */
+    selectedAsset?: IAssetMetadata;
+    /** The child assets used for nest asset typs */
+    childAssets?: IAsset[];
+    /** Additional settings for asset previews */
+    additionalSettings?: IAdditionalPageSettings;
+    /** Size of the asset thumbnails to display in the side bar */
+    thumbnailSize: ISize;
+    /** Editing context */
+    context: EditorContext;
+    /**
+     * Whether or not the editor is in a valid state
+     * State is invalid when a region has not been tagged
+     */
+    isValid: boolean;
+    formData: object;
+}
+
 @connect(mapStateToProps, mapDispatchToProps)
-export default class EditorMetadataPage extends React.Component<IEditorPageProps, IEditorPageState> {
-    public state: IEditorPageState = {
-        selectedTag: null,
-        lockedTag: undefined,
-        selectionMode: SelectionMode.NONE,
-        segmentSelectionMode: SegmentSelectionMode.NONE,
+export default class EditorMetadataPage extends React.Component<IEditorPageProps, IEditorMetadataPageState> {
+    public state: IEditorMetadataPageState = {
         assets: [],
         childAssets: [],
-        editorMode: EditorMode.Rectangle,
         additionalSettings: {
             videoSettings: (this.props.project) ? this.props.project.videoSettings : null,
             activeLearningSettings: (this.props.project) ? this.props.project.activeLearningSettings : null,
         },
         thumbnailSize: this.props.appSettings.thumbnailSize || { width: 220, height: 165 },
         isValid: true,
-        showInvalidRegionWarning: false,
         context: EditorContext.Metadata,
+        formData: undefined,
     };
 
     private loadingProjectAssets: boolean = false;
@@ -107,6 +146,7 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
         if (this.props.project && prevProps.project && this.props.project.tags !== prevProps.project.tags) {
             this.updateRootAssets();
         }
+
     }
 
     public render() {
@@ -140,8 +180,8 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
                     <div className="editor-page-content">
                         <div className="editor-page-content-main">
                             <div className="editor-page-content-main-body" style={{ overflowY: "scroll" }}>
-                                {selectedAsset &&
-                                    <Form className="editor-page-content-main-body-metadata" schema={formSchema} uiSchema={uiSchema} onSubmit={() => alert("submitted")}/>}
+                                {selectedAsset && this.state.formData &&
+                                    <Form className="editor-page-content-main-body-metadata" schema={formSchema} uiSchema={uiSchema} formData={this.state.formData} onChange={this.onFormChange} onSubmit={() => alert("submitted")}/>}
                             </div>
                         </div>
                     </div>
@@ -150,6 +190,36 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
         );
     }
 
+    private onFormChange = (changeEvent: IChangeEvent<IEditorPageProps>) => {
+        console.log(changeEvent);
+    }
+
+    private convertAssetMetadata2FormData = (selectedAsset: IAssetMetadata) => {
+        if (selectedAsset){
+            const timestring = this.getTimestampNow();
+            return {
+                ... defaultFormData,
+                id: selectedAsset.asset.id,
+                file_name: selectedAsset.asset.name,
+                included_classes_list: selectedAsset.segments.map( (s) => s.tag ),
+                labeling_object_list: Array.from(new Set(selectedAsset.regions.map( (r) => r.tag ))),
+                width: selectedAsset.asset.size.width,
+                height: selectedAsset.asset.size.height,
+                date_created: timestring,
+                date_updated: timestring,
+            }
+        }
+        else{
+            return defaultFormData;
+        }
+    }
+
+    private getTimestampNow = () => {
+        const timestampInSeconds = Math.floor(Date.now()/1000);
+        const date = new Date(timestampInSeconds*1000);
+        return date.toISOString().split("T").join(" ");
+    }
+    
     /**
      * Called when the asset side bar is resized
      * @param newWidth The new sidebar width
@@ -197,69 +267,9 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
      * This can either be a parent or child asset
      */
     private onAssetMetadataChanged = async (assetMetadata: IAssetMetadata): Promise<void> => {
-        // If the asset contains any regions without tags, don't proceed.
-        const regionsWithoutTags = assetMetadata.regions.filter((region) => region.tag ? region.tag.length === 0 : undefined);
-
-        if (regionsWithoutTags.length > 0) {
-            this.setState({ isValid: false });
-            return;
-        }
-
-        const initialState = assetMetadata.asset.state[this.state.context];
-
-        // The root asset can either be the actual asset being edited (ex: VideoFrame) or the top level / root
-        // asset selected from the side bar (image/video).
-        const rootAsset = { ...(assetMetadata.asset.parent || assetMetadata.asset) };
-
-        if (this.isTaggableAssetType(assetMetadata.asset)) {
-            assetMetadata.asset.state = {... assetMetadata.asset.state,
-                [this.state.context] : assetMetadata.regions.length > 0 ? AssetState.Tagged : AssetState.Visited };
-        } else if (assetMetadata.asset.state[this.state.context] === AssetState.NotVisited) {
-            assetMetadata.asset.state = {... assetMetadata.asset.state, [this.state.context]: AssetState.Visited };
-        }
-
-        // Update root asset if not already in the "Tagged" state
-        // This is primarily used in the case where a Video Frame is being edited.
-        // We want to ensure that in this case the root video asset state is accurately
-        // updated to match that state of the asset.
-        if (rootAsset.id === assetMetadata.asset.id) {
-            const assetMetadataObject = assetMetadata.asset.state[this.state.context];
-            rootAsset.state = { ... rootAsset.state, assetMetadataObject};
-        } else {
-            const rootAssetMetadata = await this.props.actions.loadAssetMetadata(this.props.project, rootAsset);
-
-            if (rootAssetMetadata.asset.state[this.state.context] !== AssetState.Tagged) {
-                const assetMetadataObject = assetMetadata.asset.state[this.state.context];
-                rootAssetMetadata.asset.state = { ... rootAssetMetadata.asset.state, assetMetadataObject};
-                await this.props.actions.saveAssetMetadata(this.props.project, rootAssetMetadata);
-            }
-
-            const rootAssetMetadataObject = rootAssetMetadata.asset.state[this.state.context];
-            rootAsset.state = { ... rootAsset.state, rootAssetMetadataObject};
-        }
-
-        // Only update asset metadata if state changes or is different
-        if (initialState !== assetMetadata.asset.state[this.state.context] || this.state.selectedAsset !== assetMetadata) {
-            await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
-        }
-
-        await this.props.actions.saveProject(this.props.project);
-
-        const assetService = new AssetService(this.props.project);
-        const childAssets = assetService.getChildAssets(rootAsset);
-
-        // Find and update the root asset in the internal state
-        // This forces the root assets that are displayed in the sidebar to
-        // accurately show their correct state (not-visited, visited or tagged)
-        const assets = [...this.state.assets];
-        const assetIndex = assets.findIndex((asset) => asset.id === rootAsset.id);
-        if (assetIndex > -1) {
-            assets[assetIndex] = {
-                ...rootAsset,
-            };
-        }
-
-        this.setState({ childAssets, assets, isValid: true });
+        if (assetMetadata) {
+            this.setState( {... this.state, formData: this.convertAssetMetadata2FormData(assetMetadata)});
+        };
     }
 
     /**
@@ -279,10 +289,6 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
     }
 
     private onBeforeAssetSelected = (): boolean => {
-        if (!this.state.isValid) {
-            this.setState({ showInvalidRegionWarning: true });
-        }
-
         return this.state.isValid;
     }
 
@@ -293,7 +299,6 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
         }
 
         if (!this.state.isValid) {
-            this.setState({ showInvalidRegionWarning: true });
             return;
         }
 

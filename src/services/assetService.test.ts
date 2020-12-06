@@ -126,7 +126,6 @@ describe("Asset Service", () => {
                         asset: testAssets[0],
                         regions: [],
                         segments: [],
-                        metadata: { fileName: "" },
                         version: "",
                     };
 
@@ -176,7 +175,6 @@ describe("Asset Service", () => {
                 },
                 regions: [],
                 segments: [],
-                metadata: { fileName: "" },
                 version: "",
             };
 
@@ -199,7 +197,6 @@ describe("Asset Service", () => {
                 },
                 regions: [],
                 segments: [],
-                metadata: { fileName: "" },
                 version: "",
             };
 
@@ -259,7 +256,6 @@ describe("Asset Service", () => {
                         asset: testAssets[0],
                         regions: [],
                         segments: [],
-                        metadata: { fileName: "" },
                         version: "",
                     };
 

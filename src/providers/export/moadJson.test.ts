@@ -78,7 +78,6 @@ describe("MOAD Json Export Provider", () => {
                     asset,
                     regions: [],
                     segments: [],
-                    metadata: { fileName: "" },
                     version: appInfo.version,
                 };
 

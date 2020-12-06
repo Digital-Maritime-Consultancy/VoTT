@@ -60,12 +60,12 @@
     "properties": {
         "id": {
             "$id": "#/properties/id",
-            "type": "integer",
+            "type": "string",
             "title": "이미지 고유 식별 번호",
             "description": "",
-            "default": 0,
+            "default": "",
             "examples": [
-                3231444
+                "3231444"
             ]
         },
         "file_name": {
@@ -202,7 +202,7 @@
             "enum": ["spring", "summer", "fall", "winter"],
             "title": "이미지가 촬영된 계절",
             "description": "",
-            "default": "",
+            "default": "winter",
             "examples": [
                 "fall"
             ]
@@ -213,7 +213,7 @@
             "enum": ["sunny", "cloudy", "raining", "snowing", "windy", "misty" ],
             "title": "이미지 촬영 날씨",
             "description": "",
-            "default": "",
+            "default": "sunny",
             "examples": [
                 "sunny"
             ]

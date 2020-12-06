@@ -320,7 +320,6 @@ export default class MockFactory {
             asset: asset || MockFactory.createTestAsset(),
             regions: regions || [],
             segments: segments || [],
-            metadata: metadata || {fileName: ""},
             version: appInfo.version,
             segmentationData: segmentationData || MockFactory.createTestAsset("string-seg",AssetState.NotVisited, "", AssetType.SegmentationData),
         };

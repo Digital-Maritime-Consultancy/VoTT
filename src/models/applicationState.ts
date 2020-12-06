@@ -290,7 +290,6 @@ export interface IAssetMetadata {
     asset: IAsset;
     regions: IRegion[];
     segments: ISegment[];
-    metadata: IImageMetadata;
     version: string;
     segmentationData?: IAsset;
 }
