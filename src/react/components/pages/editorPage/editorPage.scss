@@ -56,6 +56,7 @@
 
         &-metadata {
           width: 100%;
+          padding: 1em;
         }
       }
     }
@@ -286,7 +287,8 @@ canvas {
 }
 
 .badge-visited,
-.badge-tagged {
+.badge-tagged,
+.badge-incompleted {
   color: #fff;
   position: absolute;
   z-index: 2;
@@ -302,6 +304,11 @@ canvas {
 
 .badge-visited {
   background-color: rgba(darkorange, 0.9);
+  border: 1px solid $lighter-3;
+}
+
+.badge-incompleted {
+  background-color: rgba(rgb(189, 0, 0), 0.9);
   border: 1px solid $lighter-3;
 }
 

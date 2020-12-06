@@ -217,7 +217,7 @@ export default class EditorSegmentPage extends React.Component<
                                 {selectedAsset && (
                                     <SegmentCanvas
                                         ref={this.canvas}
-                                        selectedAsset={this.state.selectedAsset}
+                                        selectedAsset={this.state.selectedAsset ? this.state.selectedAsset : undefined}
                                         onAssetMetadataChanged={
                                             this.onAssetMetadataChanged
                                         }
@@ -804,7 +804,7 @@ export default class EditorSegmentPage extends React.Component<
         );
 
         // Get all root assets from source asset provider
-        const sourceSegAssets = await this.props.actions.loadMetadata(
+        const sourceSegAssets = await this.props.actions.loadSegmentationData(
             this.props.project,
         );
 

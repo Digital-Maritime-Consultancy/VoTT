@@ -233,6 +233,7 @@ export const chinesetw: IAppStrings = {
         height: "高度", // Height
         tagged: "已標記", // Tagged
         visited: "已檢視", // Visited
+        incompleted: "Incompleted",
         segmentAnnotated: "Segment annotated",
         metadataEdited: "Metadata edited",
         toolbar: {

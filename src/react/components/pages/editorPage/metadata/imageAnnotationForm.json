@@ -299,5 +299,5 @@
             ]
         }
     },
-    "additionalProperties": true
+    "additionalProperties": false
 }

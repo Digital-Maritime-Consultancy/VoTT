@@ -17,6 +17,7 @@ import { appInfo } from "../../common/appInfo";
 import { strings } from "../../common/strings";
 import { IExportFormat } from "vott-react";
 import { IVottJsonExportProviderOptions } from "../../providers/export/vottJson";
+import { ImageMetadataService } from "../../services/imageMetadataService";
 
 /**
  * Actions to be performed in relation to projects
@@ -28,7 +29,9 @@ export default interface IProjectActions {
     closeProject(): void;
     exportProject(project: IProject): Promise<void> | Promise<IExportResults>;
     loadAssets(project: IProject): Promise<IAsset[]>;
-    loadMetadata(project: IProject): Promise<IAsset[]>;
+    loadSegmentationData(project: IProject): Promise<IAsset[]>;
+    loadImageMetadata(project: IProject, filePath: string): Promise<object>;
+    saveImageMetadata(project: IProject, filePath: string, content: object): Promise<void>;
     loadAssetMetadata(project: IProject, asset: IAsset): Promise<IAssetMetadata>;
     saveAssetMetadata(project: IProject, assetMetadata: IAssetMetadata): Promise<IAssetMetadata>;
     updateProjectTag(project: IProject, oldTagName: string, newTagName: string): Promise<IAssetMetadata[]>;
@@ -142,12 +145,34 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
  * Gets metadata from project, dispatches load assets action and returns assets
  * @param project - Project from which to load assets
  */
-export function loadMetadata(project: IProject): (dispatch: Dispatch) => Promise<IAsset[]> {
+export function loadSegmentationData(project: IProject): (dispatch: Dispatch) => Promise<IAsset[]> {
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
-        const assets = await assetService.getMetadata();
-        dispatch(loadMetadataAction(assets));
+        const assets = await assetService.getSegmentationData();
+        dispatch(loadSegmentationDataAction(assets));
         return assets;
+    };
+}
+
+/**
+ * Gets metadata from project, dispatches load assets action and returns assets
+ * @param project - Project from which to load assets
+ */
+export function loadImageMetadata(project: IProject, filePath: string): (dispatch: Dispatch) => Promise<object> {
+    return async (dispatch: Dispatch) => {
+        const imageMetadataService = new ImageMetadataService(project);
+        return await imageMetadataService.loadImageMetadata(filePath);
+    };
+}
+
+/**
+ * Gets metadata from project, dispatches load assets action and returns assets
+ * @param project - Project from which to load assets
+ */
+export function saveImageMetadata(project: IProject, filePath: string, content: object): (dispatch: Dispatch) => Promise<void> {
+    return async (dispatch: Dispatch) => {
+        const imageMetadataService = new ImageMetadataService(project);
+        return await imageMetadataService.saveImageMetadata(filePath, content);
     };
 }
 
@@ -308,10 +333,17 @@ export interface ILoadProjectAssetsAction extends IPayloadAction<string, IAsset[
 }
 
 /**
- * Load metadata action type
+ * Load segmentation data action type
  */
-export interface ILoadMetadataAction extends IPayloadAction<string, IAsset[]> {
-    type: ActionTypes.LOAD_METADATA_SUCCESS;
+export interface ILoadSegmentationDataAction extends IPayloadAction<string, IAsset[]> {
+    type: ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS;
+}
+
+/**
+ * Load segmentation data action type
+ */
+export interface ILoadImageMetadataAction extends IPayloadAction<string, object> {
+    type: ActionTypes.LOAD_IMAGE_METADATA_SUCCESS;
 }
 
 /**
@@ -373,8 +405,13 @@ export const loadProjectAssetsAction =
 /**
  * Instance of Load Metadata action
  */
-export const loadMetadataAction =
-    createPayloadAction<ILoadMetadataAction>(ActionTypes.LOAD_METADATA_SUCCESS);
+export const loadSegmentationDataAction =
+    createPayloadAction<ILoadSegmentationDataAction>(ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS);
+/**
+ * Instance of Load Metadata action
+ */
+export const loadImageMetadataAction =
+    createPayloadAction<ILoadImageMetadataAction>(ActionTypes.LOAD_IMAGE_METADATA_SUCCESS);
 /**
  * Instance of Load Asset Metadata action
  */

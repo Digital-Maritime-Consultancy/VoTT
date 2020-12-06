@@ -1,10 +1,7 @@
 import _ from "lodash";
 import React, { RefObject } from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps } from "react-router-dom";
 import SplitPane from "react-split-pane";
-import { bindActionCreators } from "redux";
-import { SelectionMode } from "vott-ct/lib/js/CanvasTools/Interface/ISelectorSettings";
 import HtmlFileReader from "../../../../../common/htmlFileReader";
 import {addLocValues, strings} from "../../../../../common/strings";
 import {
@@ -12,29 +9,12 @@ import {
     IAppSettings, IAsset, IAssetMetadata, IProject, IRegion,
     ISize, ITag, IAdditionalPageSettings, AppError, ErrorCode, EditorContext,
 } from "../../../../../models/applicationState";
-import { IToolbarItemRegistration, ToolbarItemFactory } from "../../../../../providers/toolbar/toolbarItemFactory";
-import IApplicationActions, * as applicationActions from "../../../../../redux/actions/applicationActions";
-import IProjectActions, * as projectActions from "../../../../../redux/actions/projectActions";
-import { ToolbarItemName } from "../../../../../registerToolbar";
-import { AssetService } from "../../../../../services/assetService";
-import { AssetPreview } from "../../../common/assetPreview/assetPreview";
-import { KeyboardBinding } from "../../../common/keyboardBinding/keyboardBinding";
-import { KeyEventType } from "../../../common/keyboardManager/keyboardManager";
-import { TagInput } from "../../../common/tagInput/tagInput";
-import { ToolbarItem } from "../../../toolbar/toolbarItem";
-import Canvas from "../canvas";
-import CanvasHelpers from "../canvasHelpers";
 import "../editorPage.scss";
 import EditorSideBar from "../editorSideBar";
-import { EditorToolbar } from "../editorToolbar";
-import Alert from "../../../common/alert/alert";
-import Confirm from "../../../common/confirm/confirm";
-import { ActiveLearningService } from "../../../../../services/activeLearningService";
-import { toast } from "react-toastify";
-import Form, { IChangeEvent } from "react-jsonschema-form";
-import CustomFieldTemplate from "../../../common/customField/customFieldTemplate";
+import Form, { IChangeEvent, ISubmitEvent } from "react-jsonschema-form";
 import Preview from "./preview";
 import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps, SegmentSelectionMode } from '../editorPage';
+import Guard from "../../../../../common/guard";
 
 /**
  * Properties for Editor Page
@@ -53,6 +33,31 @@ import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps
 const formSchema = addLocValues(require("./imageAnnotationForm.json"));
 // tslint:disable-next-line:no-var-requires
 const uiSchema = addLocValues(require("./imageAnnotationForm.ui.json"));
+
+const nameConvention = "_metadata.json";
+
+export interface IImageMetadata {
+    id: string;
+    file_name: string;
+    frame_number: number;
+    date_captured: string;
+    source_video_id: number;
+    included_classes_list: string[];
+    labeling_object_list: string[];
+    port: string;
+    latitude: string;
+    longitude: string;
+    season: string;
+    weather: string;
+    wave_height: number;
+    wind_speed: number;
+    visible_distance: number;
+    width: number;
+    height: number;
+    date_created: string;
+    date_updated: string;
+    license: number;
+}
 
 const defaultFormData = {
     id: "",
@@ -181,7 +186,7 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
                         <div className="editor-page-content-main">
                             <div className="editor-page-content-main-body" style={{ overflowY: "scroll" }}>
                                 {selectedAsset && this.state.formData &&
-                                    <Form className="editor-page-content-main-body-metadata" schema={formSchema} uiSchema={uiSchema} formData={this.state.formData} onChange={this.onFormChange} onSubmit={() => alert("submitted")}/>}
+                                    <Form className="editor-page-content-main-body-metadata" schema={formSchema} uiSchema={uiSchema} formData={this.state.formData} onChange={this.onFormChange} onSubmit={this.onFormSubmit}/>}
                             </div>
                         </div>
                     </div>
@@ -190,8 +195,13 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
         );
     }
 
-    private onFormChange = (changeEvent: IChangeEvent<IEditorPageProps>) => {
-        console.log(changeEvent);
+    private onFormSubmit = (submitEvent: ISubmitEvent<IImageMetadata>) => {
+        this.saveImageMetadata(this.state.selectedAsset.asset.name, submitEvent.formData);
+        //∂this.setState( { ... this.state.selectedAsset, selectedAsset: this.updateAssetWithAssetState( this.state.selectedAsset, AssetState.Tagged )})
+    }
+
+    private onFormChange = (changeEvent: IChangeEvent<IImageMetadata>) => {
+        this.setState( { ... this.state, formData: changeEvent.formData });
     }
 
     private convertAssetMetadata2FormData = (selectedAsset: IAssetMetadata) => {
@@ -217,7 +227,7 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
     private getTimestampNow = () => {
         const timestampInSeconds = Math.floor(Date.now()/1000);
         const date = new Date(timestampInSeconds*1000);
-        return date.toISOString().split("T").join(" ");
+        return date.toISOString().split("T").map( (e) => e.split(".")[0] ).join(" ");
     }
     
     /**
@@ -267,9 +277,7 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
      * This can either be a parent or child asset
      */
     private onAssetMetadataChanged = async (assetMetadata: IAssetMetadata): Promise<void> => {
-        if (assetMetadata) {
-            this.setState( {... this.state, formData: this.convertAssetMetadata2FormData(assetMetadata)});
-        };
+        
     }
 
     /**
@@ -313,11 +321,49 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
             console.warn("Error computing asset size");
         }
 
+        if (assetMetadata) {
+            this.setState( {... this.state, formData: this.convertAssetMetadata2FormData(assetMetadata) } );
+            try {
+                const loadedData = await this.loadImageMetadata(assetMetadata.asset.name);
+                this.setState( {... this.state, formData: loadedData ? loadedData : this.state.formData } );
+            } catch (err) {
+                
+            }
+        };
+
         this.setState({
             selectedAsset: assetMetadata,
         }, async () => {
             await this.onAssetMetadataChanged(assetMetadata);
         });
+    }
+
+    private loadImageMetadata = async (imageFileName: string): Promise<object> => {
+        if (this.state.selectedAsset) {
+            return await this.props.actions.loadImageMetadata(
+                this.props.project, imageFileName + nameConvention );
+        }
+    }
+
+    private saveImageMetadata = async (imageFileName: string, content: object): Promise<void> => {
+        if (this.state.selectedAsset) {
+            return await this.props.actions.saveImageMetadata(
+                this.props.project, imageFileName + nameConvention , content);
+        }
+    }
+
+    private updateStateOnMetadata = (state: Record<string, AssetState>, assetState: AssetState) => {
+        const newState = state;
+        newState[EditorContext.Metadata] = assetState;
+        return newState;
+    }
+
+    private updateAssetWithAssetState = (asset: IAsset, assetState: AssetState) => {
+        return { ...asset, state: this.updateStateOnMetadata(asset.state, assetState)};
+    }
+
+    private updateAssetStates = (assets: IAsset[]) => {
+        // to be implemented
     }
 
     private loadProjectAssets = async (): Promise<void> => {
@@ -333,6 +379,8 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
 
         // Get all root assets from source asset provider
         const sourceAssets = await this.props.actions.loadAssets(this.props.project);
+
+        //sourceAssets.map( async (e) => { await this.loadImageMetadata(e.name) === undefined ? this.updateAssetWithAssetState(e, AssetState.Incompleted) : this.updateAssetWithAssetState(e, AssetState.Tagged) });
 
         // Merge and uniquify
         const rootAssets = _(rootProjectAssets)
