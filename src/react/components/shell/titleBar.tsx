@@ -82,7 +82,7 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
                         </Menu>
                     </div>
                 }
-                <div className="title-bar-main">{this.props.title || "Welcome"} - VoTT</div>
+                <div className="title-bar-main">{this.props.title || "Welcome"} - MOAD annotation tool</div>
                 <div className="title-bar-controls">
                     {this.props.children}
                     {this.state.platform === PlatformType.Windows &&

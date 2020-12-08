@@ -91,7 +91,7 @@ describe("TileBar Component", () => {
             expect(icon.exists()).toBe(true);
             expect(icon.find(".fa-tags").exists()).toBe(true);
             expect(title.exists()).toBe(true);
-            expect(title.text()).toEqual(`${defaultProps.title} - VoTT`);
+            expect(title.text()).toEqual(`${defaultProps.title} - MOAD annotation tool`);
             expect(wrapper.find(".fa-user-circle").exists()).toBe(true);
         });
     });
