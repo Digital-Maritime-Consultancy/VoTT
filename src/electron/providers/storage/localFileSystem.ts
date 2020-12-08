@@ -53,13 +53,25 @@ export default class LocalFileSystem implements IStorageProvider {
         });
     }
 
+    public makeFolderIfNotExist(containerName: string) {
+        if (containerName && containerName.length){
+            const exists = fs.existsSync(containerName);
+            if (!exists) {
+                const containerNameParent = containerName.slice(0, containerName.lastIndexOf("/"));
+                this.makeFolderIfNotExist(containerNameParent);
+                fs.mkdirSync(containerName);
+            }
+            return ;
+        }
+        else{
+            return ;
+        }
+    }
+
     public writeBinary(filePath: string, contents: Buffer): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const containerName: fs.PathLike = path.normalize(path.dirname(filePath));
-            const exists = fs.existsSync(containerName);
-            if (!exists) {
-                fs.mkdirSync(containerName);
-            }
+            this.makeFolderIfNotExist(containerName);
 
             fs.writeFile(path.normalize(filePath), contents, (err) => {
                 if (err) {
