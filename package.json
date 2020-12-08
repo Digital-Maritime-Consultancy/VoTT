@@ -1,15 +1,14 @@
 {
-    "name": "vott",
-    "version": "2.2.0",
+    "name": "moad-at",
+    "version": "0.6.0",
     "author": {
-        "name": "Microsoft",
-        "url": "https://github.com/Microsoft/VoTT"
+        "name": "Jinki Jung, DMC"
     },
-    "description": "Visual Object Tagging Tool (VoTT) - an annotation and labeling tool for images and video.",
-    "homepage": "https://github.com/Microsoft/VoTT",
+    "description": "MOAD annotation tool for images.",
+    "homepage": "https://github.com/Digital-Maritime-Consultancy/VoTT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/VoTT.git"
+        "url": "https://github.com/Digital-Maritime-Consultancy/VoTT.git"
     },
     "license": "MIT",
     "private": true,
@@ -54,6 +53,7 @@
         "redux": "^4.0.1",
         "redux-thunk": "^2.3.0",
         "rimraf": "^2.6.2",
+        "save-svg-as-png": "^1.4.17",
         "shortid": "^2.2.14",
         "video-react": "^0.13.2",
         "vott-ct": "2.1.24",

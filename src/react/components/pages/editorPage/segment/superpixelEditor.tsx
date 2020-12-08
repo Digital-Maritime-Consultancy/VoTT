@@ -9,6 +9,7 @@ export enum AnnotationTag{
 const React = require("react");
 const { useState, useEffect } = require("react");
 const Snap = require("snapsvg-cjs");
+const svgToPng = require("save-svg-as-png");
 
 const defaultOpacity = 0.1;
 const annotatedOpacity = 0.7;
@@ -55,6 +56,14 @@ export const SPId2number = (spId: string): number => {
 }
 
 const defaultAnnotation = (id: number) => new Annotation(AnnotationTag.EMPTY, AnnotationTag.EMPTY, id);
+
+export const exportToPng = (canvasId: string, fileName: string, backgroundColor: string = "#000000") => {
+    let fileNameSplit = fileName.split("/");
+    let file = fileNameSplit[fileNameSplit.length - 1];
+    console.log(document.getElementById(canvasId));
+    svgToPng.saveSvgAsPng(document.getElementById(canvasId),
+        file.split(".")[0] + ".png", {backgroundColor: backgroundColor});
+}
 
 interface SuperpixelProps {
     id: string, canvasWidth: number, canvasHeight: number, segmentationData: any,
