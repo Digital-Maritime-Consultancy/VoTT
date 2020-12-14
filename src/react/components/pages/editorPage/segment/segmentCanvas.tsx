@@ -291,13 +291,10 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     private removeAllSegments = (removeState: boolean = true) => {
-        exportToPng(superpixelEditorId, "test", "black", (uri) => console.log(uri));
-        /*
         clearEditor(superpixelEditorId, this.defaultColor);
         if (removeState) {
             this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
         }
-        */
     }
 
     private deleteSegmentsFromAsset = (segments: ISegment[]) => {
