@@ -48,8 +48,11 @@ const formSchemaForRegion = {
 }
 
 const uiSchema =  {
+    tag: {
+        "ui:disabled": true
+    },
     iscrowd: {
-      "ui:widget": "radio" // could also be "select"
+        "ui:widget": "radio" // could also be "select"
     }
 };
 

@@ -340,6 +340,10 @@ export const korean: IAppStrings = {
                         title: "개별 파일로 산출",
                         description: "이미지 당 어노테이션 결과를 산출",
                     },
+                    includeSegmentAnnotatedImages: {
+                        title: "세그먼트 어노테이션 이미지 (PNG) 포함",
+                        description: "학습을 위한 세그먼트 어노테이션 이미지 포함할지 여부",
+                    },
                 },
             },
             vottJson: {

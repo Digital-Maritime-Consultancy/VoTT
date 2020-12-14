@@ -332,6 +332,10 @@ export const spanish: IAppStrings = {
                         title: "Export individual files",
                         description: "Export seperate files",
                     },
+                    includeSegmentAnnotatedImages: {
+                        title: "Include segment annotation as PNG",
+                        description: "Whether or not to include segment annotation image for training",
+                    },
                 },
             },
             vottJson: {

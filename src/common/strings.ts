@@ -330,6 +330,10 @@ export interface IAppStrings {
                         title: string,
                         description: string,
                     },
+                    includeSegmentAnnotatedImages: {
+                        title: string,
+                        description: string,
+                    },
                 },
             },
             vottJson: {

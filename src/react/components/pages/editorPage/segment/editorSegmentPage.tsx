@@ -45,7 +45,7 @@ import {
     SegmentSelectionMode,
 } from "../editorPage";
 import SegmentCanvas from "./segmentCanvas";
-import { AnnotationTag } from "./superpixelEditor";
+import { AnnotationTag } from "./superpixelCanvas";
 import PropertyForm from "../../../common/propertyForm/propertyForm";
 
 /**

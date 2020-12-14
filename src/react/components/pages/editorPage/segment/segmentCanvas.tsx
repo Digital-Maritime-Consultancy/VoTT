@@ -11,16 +11,16 @@ import { AssetPreview, ContentSource } from "../../../common/assetPreview/assetP
 import Confirm from "../../../common/confirm/confirm";
 import { createContentBoundingBox } from "../../../../../common/layout";
 import { SegmentSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, clearEditor, getBoundingBox } from "./superpixelEditor";
+import { Annotation, AnnotationTag, clearEditor, exportToPng, getBoundingBox } from "./superpixelCanvas";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
-import { SuperpixelEditor } from "./superpixelEditor";
+import { SuperpixelCanvas } from "./superpixelCanvas";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
     selectionMode: SegmentSelectionMode;
     project: IProject;
-    lockedTag: string;
+    lockedTag?: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedSegmentChanged?: (segment: ISegment) => void;
@@ -75,17 +75,17 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     public componentDidUpdate = async (prevProps: Readonly<ISegmentCanvasProps>, prevState: Readonly<ISegmentCanvasState>) => {
         // Handles asset changing
-        if(this.props.selectedAsset.segmentationData && this.state.segmentationData === null){
+        if(this.props.project && this.props.selectedAsset.segmentationData && this.state.segmentationData === null){
             const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
-                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments),
+                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
                 segmentationData, });
             this.invalidateSelection();
         }
-        else if (this.props.selectedAsset !== prevProps.selectedAsset) {
+        else if (this.props.project && this.props.selectedAsset !== prevProps.selectedAsset) {
             const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
-                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments),
+                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
                 segmentationData, });
             this.invalidateSelection();
         }
@@ -102,9 +102,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             this.refreshCanvasToolsSegments();
         }
 
-
         // When the project tags change re-apply tags to segments
-        if (this.props.project.tags !== prevProps.project.tags) {
+        if (this.props.project && this.props.project.tags !== prevProps.project.tags) {
             this.updateCanvasToolsSegmentTags();
         }
 
@@ -199,11 +198,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
         <div id="editor-zone" className="full-size">
-            { this.state.segmentationData ? 
-            <SuperpixelEditor id={superpixelEditorId}
+            { this.state.segmentationData && this.props.project ?
+            <SuperpixelCanvas id={superpixelEditorId}
                 canvasWidth={1024} canvasHeight={768}
                 segmentationData={this.state.segmentationData}
-                annotatedData={this.decomposeSegment(this.state.currentAsset.segments)}
+                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
                 defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
                 onSegmentsUpdated={this.onSegmentOffsetsUpdated}
                 onSelectedTagUpdated={this.onSelectedTagUpdated} />
@@ -278,11 +277,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         return await response.json();
     }
 
-    private decomposeSegment = (segments: ISegment[]): Annotation[] => {
+    private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
         const annotation = [];
         for (const s of segments){
             for (const superpixel of s.superpixel){
-                const tag = this.props.project.tags.filter((tag) => tag.name === s.tag);
+                const tag = tags.filter((tag) => tag.name === s.tag);
                 if(tag.length > 0){
                     annotation.push(new Annotation(s.tag, tag[0].color, superpixel));
                 }
@@ -292,10 +291,13 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     private removeAllSegments = (removeState: boolean = true) => {
+        exportToPng(superpixelEditorId, "test", "black", (uri) => console.log(uri));
+        /*
         clearEditor(superpixelEditorId, this.defaultColor);
         if (removeState) {
             this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
         }
+        */
     }
 
     private deleteSegmentsFromAsset = (segments: ISegment[]) => {

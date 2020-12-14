@@ -64,6 +64,7 @@ describe("MOAD Json Export Provider", () => {
             assetState: ExportAssetState.All,
             includeLabelImages: false,
             exportIndividuals: false,
+            includeSegmentAnnotatedImages: false,
         };
         const exportProvider = ExportProviderFactory.create("moadJson", testProject, options);
         expect(exportProvider).not.toBeNull();
@@ -95,6 +96,7 @@ describe("MOAD Json Export Provider", () => {
                 assetState: ExportAssetState.All,
                 includeLabelImages: false,
                 exportIndividuals: false,
+                includeSegmentAnnotatedImages: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -123,6 +125,7 @@ describe("MOAD Json Export Provider", () => {
                 assetState: ExportAssetState.Visited,
                 includeLabelImages: false,
                 exportIndividuals: false,
+                includeSegmentAnnotatedImages: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -155,6 +158,7 @@ describe("MOAD Json Export Provider", () => {
                 assetState: ExportAssetState.Tagged,
                 includeLabelImages: false,
                 exportIndividuals: false,
+                includeSegmentAnnotatedImages: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -184,6 +188,7 @@ describe("MOAD Json Export Provider", () => {
                 assetState: ExportAssetState.All,
                 includeLabelImages: false,
                 exportIndividuals: false,
+                includeSegmentAnnotatedImages: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -198,6 +203,7 @@ describe("MOAD Json Export Provider", () => {
                 assetState: ExportAssetState.All,
                 includeLabelImages: false,
                 exportIndividuals: false,
+                includeSegmentAnnotatedImages: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
