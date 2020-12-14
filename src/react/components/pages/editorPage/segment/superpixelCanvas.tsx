@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { ISegmentOffset } from "../../../../../models/applicationState";
 
 const React = require("react");
 const { useState, useEffect } = require("react");
@@ -8,12 +9,6 @@ const svgToPng = require("save-svg-as-png");
 export enum AnnotationTag{
   EMPTY = "empty",
   DEANNOTATING = "deannotating",
-}
-
-export interface ITag {
-  tag: string;
-  superpixelId: number;
-  area: number;
 }
 
 const defaultOpacity = 0.1;
@@ -311,7 +306,7 @@ const paintAndUpdateState = (event: MouseEvent, superpixel: any, defaultcolor: s
     }
 };
 
-type ISegmentsCallback = (segments: ITag[]) => void;
+type ISegmentsCallback = (segments: ISegmentOffset[]) => void;
 
 export const paintSuperpixel =
         (snapElement: Snap.Paper, tag: string, color: string, area: number, onSegmentsUpdated: ISegmentsCallback) => {
