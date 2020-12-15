@@ -253,6 +253,8 @@ export const chinesetw: IAppStrings = {
             saveProject: "儲存專案", // Save Project
             exportProject: "匯出專案", // Export Project
             activeLearning: "主動學習", // Active Learning
+            annotateSegments: "Annotate Segments",
+            removeAnnotation: "Remove Annotation",
         },
         videoPlayer: {
             previousTaggedFrame: {

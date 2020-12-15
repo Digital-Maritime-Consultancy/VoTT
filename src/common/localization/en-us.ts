@@ -244,6 +244,8 @@ export const english: IAppStrings = {
             saveProject: "Save Project",
             exportProject: "Export Project",
             activeLearning: "Active Learning",
+            annotateSegments: "Annotate Segments",
+            removeAnnotation: "Remove Annotation",
         },
         videoPlayer: {
             previousTaggedFrame: {

@@ -250,6 +250,8 @@ export const japanese: IAppStrings = {
             saveProject: "プロジェクトを保存", // Save Project,
             exportProject: "プロジェクトをエクスポート",  // Export Project,
             activeLearning: "アクティブ ラーニング",  // Active Learning"
+            annotateSegments: "Annotate Segments",
+            removeAnnotation: "Remove Annotation",
         },
         videoPlayer: {
             previousTaggedFrame: {

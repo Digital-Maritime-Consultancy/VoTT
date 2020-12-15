@@ -247,6 +247,8 @@ export interface IAppStrings {
             saveProject: string;
             exportProject: string;
             activeLearning: string;
+            annotateSegments: string;
+            removeAnnotation: string;
         }
         videoPlayer: {
             nextTaggedFrame: {

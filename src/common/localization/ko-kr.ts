@@ -250,7 +250,9 @@ export const korean: IAppStrings = {
             nextAsset: "다음 Asset",  // Next Asset,
             saveProject: "프로젝트 저장", // Save Project,
             exportProject: "프로젝트 내보내기",  // Export Project,
-            activeLearning: "Active Learning",  // Active Learning"
+            activeLearning: "자동 어노테이션",  // Active Learning"
+            annotateSegments: "어노테이션 넣기",
+            removeAnnotation: "어노테이션 빼기",
         },
         videoPlayer: {
             previousTaggedFrame: {
