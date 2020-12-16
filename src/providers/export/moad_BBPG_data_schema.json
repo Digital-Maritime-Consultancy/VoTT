@@ -338,11 +338,11 @@
                                 ]
                             }
                         },
-                        "additionalProperties": true
+                        "additionalProperties": false
                     }
                 ]
             }
         }
     },
-    "additionalProperties": true
+    "additionalProperties": false
 }

@@ -10,15 +10,22 @@ const formSchemaForSegment = {
     type: "object",
     properties: {
         tag: {
-            type: "string"
+            type: "string",
+            description: "선택된 어노테이션 태그",
         },
         iscrowd: {
             type: "boolean",
+            description: "(객체인 경우) 하나 이상의 객체가 뭉쳐져 있음",
             default: false,
         },
         risk: {
             type: "string",
-            enum: ["safe", "danger", "caution"],
+            description: "위험 수준",
+            oneOf: [
+                {const: "safe", title: "안전"},
+                {const: "danger", title: "위험"},
+                {const: "caution", title: "주의"},
+            ],
             default: "safe",
         }
     }
@@ -29,19 +36,27 @@ const formSchemaForRegion = {
     type: "object",
     properties: {
         tag: {
-            type: "string"
+            type: "string",
+            description: "지정된 어노테이션 태그",
         },
         istruncated: {
             type: "boolean",
+            description: "해당 객체의 일부분은 사진 영역 밖에 있음 (잘려있음)",
             default: false,
         },
         isobscured: {
             type: "boolean",
+            description: "해당 객체는 다른 객체에 의해 일부가 가려져 있음",
             default: false,
         },
         risk: {
             type: "string",
-            enum: ["safe", "danger", "caution"],
+            description: "위험 수준",
+            oneOf: [
+                {const: "safe", title: "안전"},
+                {const: "danger", title: "위험"},
+                {const: "caution", title: "주의"},
+            ],
             default: "safe",
         },
     }
@@ -49,10 +64,16 @@ const formSchemaForRegion = {
 
 const uiSchema =  {
     tag: {
-        "ui:disabled": true
+        "ui:disabled": true,
     },
     iscrowd: {
-        "ui:widget": "radio" // could also be "select"
+        "ui:widget": "radio",
+    },
+    istruncated: {
+        "ui:widget": "radio",
+    },
+    isobscured: {
+        "ui:widget": "radio",
     }
 };
 
