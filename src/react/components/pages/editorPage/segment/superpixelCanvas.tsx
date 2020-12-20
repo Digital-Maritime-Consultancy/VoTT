@@ -123,8 +123,9 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
             opacity: annotation.tag === AnnotationTag.EMPTY ? defaultOpacity : annotatedOpacity,
             tag: annotation.tag,
             name: annotation.color,
-            area: pixels.length });
-            superpixel.mouseover( () => {
+            area: pixels.length,
+            });
+            superpixel.mouseover( (event: MouseEvent) => {
               if(canvasRef && canvasRef.current){
                 const annotatingTag = canvasRef.current.getAttribute("color-profile");
                 const currentColor = superpixel.attr().name;
@@ -138,7 +139,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                     }
               }                
                 })
-                .mouseout( () => {
+                .mouseout( (event: MouseEvent) => {
                   if(canvasRef && canvasRef.current){
                     const annotatingTag = canvasRef.current.getAttribute("color-profile");
                     const currentColor = superpixel.attr().name;
@@ -160,14 +161,14 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 .mouseup( (event: MouseEvent) => {
                     const tag: string = superpixel.attr()["tag"];
                     onSelectedTagUpdated(tag);
-                });
+                }).drag( () => false, ()=>false, ()=>false);
             return superpixel;
         });
     }, [segmentation, annotated]);
     const viewBoxString = [0, 0, canvasWidth, canvasHeight].join(
         " "
     );
-    return (<svg xmlnsXlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" key={id} ref={canvasRef} id={id} colorProfile={annotating.tag} name={annotating.color} viewBox={viewBoxString}></svg>);
+    return (<svg onDragStart={() => false} xmlnsXlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" key={id} ref={canvasRef} id={id} colorProfile={annotating.tag} name={annotating.color} viewBox={viewBoxString}></svg>);
 }
 
 const getAnnotationData = (

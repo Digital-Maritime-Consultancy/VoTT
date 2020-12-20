@@ -20,6 +20,8 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
     selectionMode: SegmentSelectionMode;
     project: IProject;
+    canvasWidth: number;
+    canvasHeight: number;
     lockedTag?: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
@@ -42,6 +44,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     public static defaultProps: ISegmentCanvasProps = {
         selectionMode: SegmentSelectionMode.NONE,
         selectedAsset: null,
+        canvasWidth: 0,
+        canvasHeight: 0,
         project: null,
         lockedTag: undefined,
     };
@@ -111,8 +115,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         if (prevState.enabled !== this.state.enabled) {
             // When the canvas is ready to display
             if (this.state.enabled) {
-                //this.refreshCanvasToolsSegments();
-                //this.clearSegmentationData();
                 this.setSelectionMode(this.props.selectionMode);
                 
             } else { // When the canvas has been disabled
@@ -197,18 +199,17 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-        <div id="editor-zone" className="full-size">
-            { this.state.segmentationData && this.props.project ?
-            <SuperpixelCanvas id={superpixelEditorId}
-                canvasWidth={1024} canvasHeight={768}
-                segmentationData={this.state.segmentationData}
-                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
-                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
-                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
-                onSelectedTagUpdated={this.onSelectedTagUpdated} />
-            : <div> segmentation is loading... </div> }
-            
-        </div>
+                        <div id="editor-zone" className="full-size">
+                            { this.state.segmentationData && this.props.project ?
+                            <SuperpixelCanvas id={superpixelEditorId}
+                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight}
+                                segmentationData={this.state.segmentationData}
+                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
+                                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
+                                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
+                                onSelectedTagUpdated={this.onSelectedTagUpdated} />
+                            : <div> segmentation is loading... </div>}
+                        </div>
                     </div>
                 </div>
                 {this.renderChildren()}
