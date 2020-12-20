@@ -161,6 +161,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 .mouseup( (event: MouseEvent) => {
                     const tag: string = superpixel.attr()["tag"];
                     onSelectedTagUpdated(tag);
+                    onSegmentsUpdated([], true);
                 }).drag( () => false, ()=>false, ()=>false);
             return superpixel;
         });

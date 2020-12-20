@@ -66,6 +66,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
+    
+    private updateQueue: ISegmentOffset[] = [];
 
     public componentDidMount = () => {
         window.addEventListener("resize", this.onWindowResize);
@@ -339,7 +341,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             const addition = offset.tag !== AnnotationTag.DEANNOTATING;
             if (addition){
                 if (segments.filter((e) => e.tag === offset.tag && e.superpixel.includes(offset.superpixelId)).length > 0){ // already contains
-                    return segments;
+                    continue;
                 }
                 let founded = 0;
                 processedSegments = processedSegments.map((element): ISegment => {
@@ -351,7 +353,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         return element;
                     }
                 });
-                return founded === 1 ? processedSegments : [...segments,
+                processedSegments = founded === 1 ? processedSegments : [...segments,
                     this.getInitialSegment(shortid.generate(), offset.tag, offset.superpixelId, offset.area, { left:0, top: 0, width:0, height: 0 })];
             }
             else{ // subtraction
@@ -363,19 +365,25 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         }
                         return this.integrateOffset(element, offset, addition);
                     }
-                    else {
+                    else{
                         return element;
                     }
                 });
-                return emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
+                processedSegments = emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
             }
         }
         return processedSegments;
     }
 
-    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[]) => {
-        const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, offsets);
-        this.onSegmentsUpdated(processedSegments);
+    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
+        if (applyNow) {
+            const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
+            this.onSegmentsUpdated(processedSegments);
+            this.updateQueue = [];
+        }
+        else{
+            offsets.map((item) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
+        }
     }
 
     private renderChildren = () => {
