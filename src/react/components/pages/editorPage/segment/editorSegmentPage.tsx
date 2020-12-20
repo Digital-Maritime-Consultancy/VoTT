@@ -228,6 +228,8 @@ export default class EditorSegmentPage extends React.Component<
                                         }
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}
+                                        canvasWidth={1024}
+                                        canvasHeight={768}
                                     >
                                         <AssetPreview
                                             additionalSettings={

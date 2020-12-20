@@ -20,6 +20,8 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
     selectionMode: SegmentSelectionMode;
     project: IProject;
+    canvasWidth: number;
+    canvasHeight: number;
     lockedTag?: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
@@ -42,6 +44,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     public static defaultProps: ISegmentCanvasProps = {
         selectionMode: SegmentSelectionMode.NONE,
         selectedAsset: null,
+        canvasWidth: 0,
+        canvasHeight: 0,
         project: null,
         lockedTag: undefined,
     };
@@ -62,6 +66,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
+    
+    private updateQueue: ISegmentOffset[] = [];
 
     public componentDidMount = () => {
         window.addEventListener("resize", this.onWindowResize);
@@ -111,8 +117,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         if (prevState.enabled !== this.state.enabled) {
             // When the canvas is ready to display
             if (this.state.enabled) {
-                //this.refreshCanvasToolsSegments();
-                //this.clearSegmentationData();
                 this.setSelectionMode(this.props.selectionMode);
                 
             } else { // When the canvas has been disabled
@@ -197,18 +201,17 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-        <div id="editor-zone" className="full-size">
-            { this.state.segmentationData && this.props.project ?
-            <SuperpixelCanvas id={superpixelEditorId}
-                canvasWidth={1024} canvasHeight={768}
-                segmentationData={this.state.segmentationData}
-                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
-                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
-                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
-                onSelectedTagUpdated={this.onSelectedTagUpdated} />
-            : <div> segmentation is loading... </div> }
-            
-        </div>
+                        <div id="editor-zone" className="full-size">
+                            { this.state.segmentationData && this.props.project ?
+                            <SuperpixelCanvas id={superpixelEditorId}
+                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight}
+                                segmentationData={this.state.segmentationData}
+                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
+                                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
+                                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
+                                onSelectedTagUpdated={this.onSelectedTagUpdated} />
+                            : <div> segmentation is loading... </div>}
+                        </div>
                     </div>
                 </div>
                 {this.renderChildren()}
@@ -338,7 +341,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             const addition = offset.tag !== AnnotationTag.DEANNOTATING;
             if (addition){
                 if (segments.filter((e) => e.tag === offset.tag && e.superpixel.includes(offset.superpixelId)).length > 0){ // already contains
-                    return segments;
+                    continue;
                 }
                 let founded = 0;
                 processedSegments = processedSegments.map((element): ISegment => {
@@ -350,7 +353,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         return element;
                     }
                 });
-                return founded === 1 ? processedSegments : [...segments,
+                processedSegments = founded === 1 ? processedSegments : [...segments,
                     this.getInitialSegment(shortid.generate(), offset.tag, offset.superpixelId, offset.area, { left:0, top: 0, width:0, height: 0 })];
             }
             else{ // subtraction
@@ -362,19 +365,25 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         }
                         return this.integrateOffset(element, offset, addition);
                     }
-                    else {
+                    else{
                         return element;
                     }
                 });
-                return emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
+                processedSegments = emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
             }
         }
         return processedSegments;
     }
 
-    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[]) => {
-        const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, offsets);
-        this.onSegmentsUpdated(processedSegments);
+    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
+        if (applyNow) {
+            const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
+            this.onSegmentsUpdated(processedSegments);
+            this.updateQueue = [];
+        }
+        else{
+            offsets.map((item) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
+        }
     }
 
     private renderChildren = () => {
