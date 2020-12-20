@@ -133,7 +133,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                     canvasRef.current.setAttribute("content-script-type", currentColor); // storing color
                     updateSuperpixelSVG(superpixel,
                          annotatingTag === AnnotationTag.DEANNOTATING ? defaultcolor : fillColor,
-                         annotatingOpacity,
+                         annotatingTag === AnnotationTag.DEANNOTATING ? defaultOpacity : annotatingOpacity,
                          highlightLineWidth);
                     }
               }                

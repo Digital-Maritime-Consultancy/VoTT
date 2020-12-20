@@ -37,7 +37,6 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             });
         }
 
-        /*
         const exportObject = { ...this.project };
         exportObject.assets = _.keyBy(results, (assetMetadata) => assetMetadata.asset.id) as any;
 
@@ -76,7 +75,6 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             const fileName = `moad-json-export/${this.project.name.replace(/\s/g, "-")}${constants.exportFileExtension}`;
             await this.storageProvider.writeText(fileName, JSON.stringify(exportObject, null, 4));
         }
-        */
     }
 
     private segments2PS(segments: ISegment[], asset: IAsset){
