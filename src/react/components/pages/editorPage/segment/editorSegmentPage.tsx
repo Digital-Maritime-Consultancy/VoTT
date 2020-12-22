@@ -253,7 +253,7 @@ export default class EditorSegmentPage extends React.Component<
                                 )}
                             </div>
                         </div>
-                        <div className="editor-page-right-sidebar"> 
+                        <div className="editor-page-right-sidebar">
                             <TagInput
                                 ref={this.tagInput}
                                 tags={this.props.project.tags}
@@ -602,7 +602,17 @@ export default class EditorSegmentPage extends React.Component<
         */
     }
 
-    private onTagsChanged = async (tags) => {
+    private onTagsChanged = async (tags: ITag[]) => {
+        // apply color first when it has changed
+        this.props.project.tags.map( (tag) => {
+            const index = tags.findIndex(x => x.name === tag.name);
+            if (index >= 0 && tag.color !== tags[index].color){
+                if (this.canvas && this.canvas.current.getAnnotating() && this.canvas.current.getAnnotating().name === tag.name){
+                    this.canvas.current.updateAnnotating(tags[index].name, tags[index].color);
+                }
+            }
+        });
+
         const project = {
             ...this.props.project,
             tags,

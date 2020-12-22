@@ -155,6 +155,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
     }
 
+    public getAnnotating = (): ITag => {
+        const svg = document.getElementById(superpixelEditorId);
+        return svg ? { name: svg.getAttribute("color-profile"),  color: svg.getAttribute("name") } : undefined;
+    }
+
     public updateAnnotating(tag: string, color: string){
         const svg = document.getElementById(superpixelEditorId);
         if(svg){
