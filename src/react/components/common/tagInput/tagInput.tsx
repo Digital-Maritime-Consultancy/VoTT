@@ -2,7 +2,7 @@ import React, { KeyboardEvent, RefObject } from "react";
 import ReactDOM from "react-dom";
 import Align from "rc-align";
 import { randomIntInRange } from "../../../../common/utils";
-import { IRegion, ITag } from "../../../../models/applicationState";
+import { EditorContext, IRegion, ITag } from "../../../../models/applicationState";
 import { ColorPicker } from "../colorPicker";
 import "./tagInput.scss";
 import "../condensedList/condensedList.scss";
@@ -10,6 +10,7 @@ import TagInputItem, { ITagInputItemProps, ITagClickProps } from "./tagInputItem
 import TagInputToolbar from "./tagInputToolbar";
 import { toast } from "react-toastify";
 import { strings } from "../../../../common/strings";
+import { ExtendedSelectionMode } from "../../pages/editorPage/editorPage";
 // tslint:disable-next-line:no-var-requires
 const tagColors = require("../../common/tagColors.json");
 
@@ -40,6 +41,10 @@ export interface ITagInputProps {
     showSearchBox?: boolean;
     /** Support instant tag application */
     instantTagClick: boolean;
+    /** Context of associated Editor */
+    editorContext?: EditorContext;
+    /** Editor mode of associated Editor */
+    selectionMode?: ExtendedSelectionMode;
 }
 
 export interface ITagInputState {
@@ -360,6 +365,11 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
     }
 
     private handleClick = (tag: ITag, props: ITagClickProps) => {
+        if (this.props.editorContext && this.props.selectionMode &&
+            this.props.editorContext === EditorContext.Segment &&
+            this.props.selectionMode !== ExtendedSelectionMode.ANNOTATING) {
+            return ;
+        }
         // Lock tags
         if (props.ctrlKey && this.props.onCtrlTagClick) {
             this.props.onCtrlTagClick(tag);

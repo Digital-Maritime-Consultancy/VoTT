@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
 import SplitPane from "react-split-pane";
 import { bindActionCreators } from "redux";
-import { SelectionMode } from "vott-ct/lib/js/CanvasTools/Interface/ISelectorSettings";
 import HtmlFileReader from "../../../../../common/htmlFileReader";
 import { strings } from "../../../../../common/strings";
 import {
@@ -31,8 +30,9 @@ import Alert from "../../../common/alert/alert";
 import Confirm from "../../../common/confirm/confirm";
 import { ActiveLearningService } from "../../../../../services/activeLearningService";
 import { toast } from "react-toastify";
-import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps, SegmentSelectionMode } from '../editorPage';
+import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps, ExtendedSelectionMode } from '../editorPage';
 import PropertyForm from "../../../common/propertyForm/propertyForm";
+import { SelectionMode } from "vott-ct/lib/js/CanvasTools/Interface/ISelectorSettings";
 
 /**
  * Properties for Editor Page
@@ -51,8 +51,7 @@ export default class EditorGeometryPage extends React.Component<IEditorPageProps
     public state: IEditorPageState = {
         selectedTag: null,
         lockedTag: undefined,
-        selectionMode: SelectionMode.NONE,
-        segmentSelectionMode: SegmentSelectionMode.NONE,
+        selectionMode: ExtendedSelectionMode.NONE,
         assets: [],
         childAssets: [],
         editorMode: EditorMode.Select,
@@ -171,7 +170,7 @@ export default class EditorGeometryPage extends React.Component<IEditorPageProps
                                         onCanvasRendered={this.onCanvasRendered}
                                         onSelectedRegionsChanged={this.onSelectedRegionsChanged}
                                         editorMode={this.state.editorMode}
-                                        selectionMode={this.state.selectionMode}
+                                        selectionMode={this.convertEnum(this.state.selectionMode)}
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}>
                                         <AssetPreview
@@ -478,31 +477,31 @@ export default class EditorGeometryPage extends React.Component<IEditorPageProps
         switch (toolbarItem.props.name) {
             case ToolbarItemName.DrawRectangle:
                 this.setState({
-                    selectionMode: SelectionMode.RECT,
+                    selectionMode: ExtendedSelectionMode.RECT,
                     editorMode: EditorMode.Rectangle,
                 });
                 break;
             case ToolbarItemName.DrawPolygon:
                 this.setState({
-                    selectionMode: SelectionMode.POLYGON,
+                    selectionMode: ExtendedSelectionMode.POLYGON,
                     editorMode: EditorMode.Polygon,
                 });
                 break;
             case ToolbarItemName.DrawPolyline:
                 this.setState({
-                    selectionMode: SelectionMode.POLYLINE,
+                    selectionMode: ExtendedSelectionMode.POLYLINE,
                     editorMode: EditorMode.Polyline,
                 });
                 break;
             case ToolbarItemName.CopyRectangle:
                 this.setState({
-                    selectionMode: SelectionMode.COPYRECT,
+                    selectionMode: ExtendedSelectionMode.COPYRECT,
                     editorMode: EditorMode.CopyRect,
                 });
                 break;
             case ToolbarItemName.SelectCanvas:
                 this.setState({
-                    selectionMode: SelectionMode.NONE,
+                    selectionMode: ExtendedSelectionMode.NONE,
                     editorMode: EditorMode.Select,
                 });
                 break;
@@ -660,5 +659,10 @@ export default class EditorGeometryPage extends React.Component<IEditorPageProps
         });
 
         this.setState({ assets: updatedAssets });
+    }
+
+    private convertEnum = (original: ExtendedSelectionMode) => {
+        return original > SelectionMode.POLYGON ? SelectionMode.NONE :
+            SelectionMode[ExtendedSelectionMode[original] as keyof typeof SelectionMode];
     }
 }

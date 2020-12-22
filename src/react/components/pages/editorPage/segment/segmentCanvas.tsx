@@ -10,15 +10,15 @@ import * as shortid from "shortid";
 import { AssetPreview, ContentSource } from "../../../common/assetPreview/assetPreview";
 import Confirm from "../../../common/confirm/confirm";
 import { createContentBoundingBox } from "../../../../../common/layout";
-import { SegmentSelectionMode } from "../editorPage";
 import { Annotation, AnnotationTag, clearEditor, exportToPng, getBoundingBox } from "./superpixelCanvas";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { SuperpixelCanvas } from "./superpixelCanvas";
+import { ExtendedSelectionMode } from "../editorPage";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
-    selectionMode: SegmentSelectionMode;
+    selectionMode: ExtendedSelectionMode;
     project: IProject;
     canvasWidth: number;
     canvasHeight: number;
@@ -42,7 +42,7 @@ export interface ISegmentCanvasState {
 
 export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, ISegmentCanvasState> {
     public static defaultProps: ISegmentCanvasProps = {
-        selectionMode: SegmentSelectionMode.NONE,
+        selectionMode: ExtendedSelectionMode.NONE,
         selectedAsset: null,
         canvasWidth: 0,
         canvasHeight: 0,
@@ -120,7 +120,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 this.setSelectionMode(this.props.selectionMode);
                 
             } else { // When the canvas has been disabled
-                this.setSelectionMode(SegmentSelectionMode.NONE);
+                this.setSelectionMode(ExtendedSelectionMode.NONE);
             }
         }
     }
@@ -143,14 +143,14 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
     }
 
-    public setSelectionMode(segmentSelectionMode: SegmentSelectionMode){
-        if(segmentSelectionMode === SegmentSelectionMode.NONE){
+    public setSelectionMode(selectionMode: ExtendedSelectionMode){
+        if(selectionMode === ExtendedSelectionMode.NONE){
             this.updateAnnotating(AnnotationTag.EMPTY, this.defaultColor);
         }
-        else if(segmentSelectionMode === SegmentSelectionMode.DEANNOTATING){
+        else if(selectionMode === ExtendedSelectionMode.DEANNOTATING){
             this.updateAnnotating(AnnotationTag.DEANNOTATING, this.defaultColor);
         }
-        else if(segmentSelectionMode === SegmentSelectionMode.ANNOTATING){
+        else if(selectionMode === ExtendedSelectionMode.ANNOTATING){
             this.updateAnnotating(this.previousAnnotating.tag, this.previousAnnotating.color);
         }
     }
