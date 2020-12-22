@@ -97,6 +97,7 @@ export default class EditorSegmentPage extends React.Component<
     private canvas: RefObject<SegmentCanvas> = React.createRef();
     private renameTagConfirm: React.RefObject<Confirm> = React.createRef();
     private deleteTagConfirm: React.RefObject<Confirm> = React.createRef();
+    private tagInput: RefObject<TagInput> = React.createRef();
 
     public async componentDidMount() {
         const projectId = this.props.match.params["projectId"];
@@ -113,6 +114,8 @@ export default class EditorSegmentPage extends React.Component<
             this.props.project.activeLearningSettings,
         );
         this.onSelectedSegmentChanged = this.onSelectedSegmentChanged.bind(this);
+
+        this.onSelectionModeChanged(this.state.selectionMode);
     }
 
     public async componentDidUpdate(prevProps: Readonly<IEditorPageProps>) {
@@ -252,9 +255,8 @@ export default class EditorSegmentPage extends React.Component<
                         </div>
                         <div className="editor-page-right-sidebar"> 
                             <TagInput
+                                ref={this.tagInput}
                                 tags={this.props.project.tags}
-                                editorContext={this.state.context}
-                                selectionMode={this.state.selectionMode}
                                 lockedTag={this.state.lockedTag}
                                 selectedRegions={this.state.selectedRegions}
                                 onChange={this.onTagsChanged}
@@ -271,7 +273,7 @@ export default class EditorSegmentPage extends React.Component<
                                 selectedSegment={this.state.selectedSegment ? this.state.selectedSegment : undefined}
                                 onSegmentsUpdated={this.canvas && this.canvas.current ? this.canvas.current.onSegmentsUpdated : undefined}
                                 onSelectedSegmentChanged={this.onSelectedSegmentChanged}
-                                />
+                            />
                         </div>
                         <Confirm
                             title={strings.editorPage.tags.rename.title}
@@ -579,6 +581,14 @@ export default class EditorSegmentPage extends React.Component<
         this.setState({ selectedSegment });
     }
 
+    private onSelectionModeChanged = async (
+        selectionMode: ExtendedSelectionMode,
+    ): Promise<void> => {
+        if (this.tagInput){
+            this.tagInput.current.updateTagInput(selectionMode);
+        }
+    }
+
     /**
      * Raised when the asset binary has been painted onto the canvas tools rendering canvas
      */
@@ -613,21 +623,25 @@ export default class EditorSegmentPage extends React.Component<
                 this.setState({
                     selectionMode: ExtendedSelectionMode.ANNOTATING,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.ANNOTATING);
                 break;
             case ToolbarItemName.SelectCanvas:
                 this.setState({
                     selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.RemoveAnnotation:
                 this.setState({
                     selectionMode: ExtendedSelectionMode.DEANNOTATING,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.DEANNOTATING);
                 break;
             case ToolbarItemName.ShowSegBoundary:
                 this.setState({
                     selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.PreviousAsset:
                 await this.goToRootAsset(-1);

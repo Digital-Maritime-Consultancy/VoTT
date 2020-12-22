@@ -41,10 +41,6 @@ export interface ITagInputProps {
     showSearchBox?: boolean;
     /** Support instant tag application */
     instantTagClick: boolean;
-    /** Context of associated Editor */
-    editorContext?: EditorContext;
-    /** Editor mode of associated Editor */
-    selectionMode?: ExtendedSelectionMode;
 }
 
 export interface ITagInputState {
@@ -58,6 +54,7 @@ export interface ITagInputState {
     editingTag: ITag;
     portalElement: Element;
     editingTagNode: Element;
+    areTagsClickable: boolean;
 }
 
 function defaultDOMNode(): Element {
@@ -77,6 +74,7 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
         editingTag: null,
         editingTagNode: null,
         portalElement: defaultDOMNode(),
+        areTagsClickable: true,
     };
 
     private tagItemRefs: Map<string, TagInputItem> = new Map<string, TagInputItem>();
@@ -158,6 +156,18 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
         if (prevProps.selectedRegions !== this.props.selectedRegions && this.props.selectedRegions.length > 0) {
             this.setState({
                 selectedTag: null,
+            });
+        }
+    }
+
+    public updateTagInput(selectionMode: ExtendedSelectionMode) {
+        if (selectionMode === ExtendedSelectionMode.ANNOTATING) {
+            this.setState({
+                areTagsClickable: true,
+            });
+        } else {
+            this.setState({
+                areTagsClickable: false,
             });
         }
     }
@@ -314,6 +324,7 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
             <TagInputItem
                 key={prop.tag.name}
                 ref={(item) => this.setTagItemRef(item, prop.tag)}
+                isClickable={this.state.areTagsClickable}
                 {...prop}
             />);
     }
@@ -365,11 +376,6 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
     }
 
     private handleClick = (tag: ITag, props: ITagClickProps) => {
-        if (this.props.editorContext && this.props.selectionMode &&
-            this.props.editorContext === EditorContext.Segment &&
-            this.props.selectionMode !== ExtendedSelectionMode.ANNOTATING) {
-            return ;
-        }
         // Lock tags
         if (props.ctrlKey && this.props.onCtrlTagClick) {
             this.props.onCtrlTagClick(tag);
