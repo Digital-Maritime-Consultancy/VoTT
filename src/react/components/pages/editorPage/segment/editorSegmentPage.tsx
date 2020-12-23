@@ -609,6 +609,7 @@ export default class EditorSegmentPage extends React.Component<
             if (index >= 0 && tag.color !== tags[index].color){
                 if (this.canvas && this.canvas.current.getAnnotating() && this.canvas.current.getAnnotating().name === tag.name){
                     this.canvas.current.updateAnnotating(tags[index].name, tags[index].color);
+                    this.canvas.current.refreshCanvas();
                 }
             }
         });

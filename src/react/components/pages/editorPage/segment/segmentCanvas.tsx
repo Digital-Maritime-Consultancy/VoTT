@@ -105,7 +105,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
         // When the selected asset has changed but is still the same asset id
         if (!assetIdChanged && this.state.currentAsset !== prevState.currentAsset) {
-            this.refreshCanvasToolsSegments();
+            // this.refreshCanvas();
         }
 
         // When the project tags change re-apply tags to segments
@@ -118,7 +118,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             // When the canvas is ready to display
             if (this.state.enabled) {
                 this.setSelectionMode(this.props.selectionMode);
-                
             } else { // When the canvas has been disabled
                 this.setSelectionMode(ExtendedSelectionMode.NONE);
             }
@@ -257,6 +256,18 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.onWindowResize();
     }
 
+    public refreshCanvas = () => {
+        this.clearSegmentationData();
+        /*
+        // the function currently not used
+        if (!this.state.currentAsset.segments || this.state.currentAsset.segments.length === 0) {
+            return;
+        }
+        //this.removeAllSegments(false);
+        */
+       //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
+    }
+
     private onSelectedTagUpdated = async (
         tag: string,
     ): Promise<void> => {
@@ -310,18 +321,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             return !segments.find((s) => s.id === assetSegment.id);
         });
         this.onSegmentsUpdated(filteredSegments);
-    }
-
-    private refreshCanvasToolsSegments = () => {
-        //forceEditorUpdate();
-        /*
-        // the function currently not used
-        if (!this.state.currentAsset.segments || this.state.currentAsset.segments.length === 0) {
-            return;
-        }
-        //this.removeAllSegments(false);
-        */
-       //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
     }
 
     private getInitialSegment = (id: number, tag: string, superpixelId: number, area: number, bbox: IBoundingBox): ISegment => {
