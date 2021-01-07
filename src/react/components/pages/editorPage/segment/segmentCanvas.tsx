@@ -10,11 +10,10 @@ import * as shortid from "shortid";
 import { AssetPreview, ContentSource } from "../../../common/assetPreview/assetPreview";
 import Confirm from "../../../common/confirm/confirm";
 import { createContentBoundingBox } from "../../../../../common/layout";
-import { Annotation, AnnotationTag, clearEditor, exportToPng, getBoundingBox } from "./superpixelCanvas";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
-import { SuperpixelCanvas } from "./superpixelCanvas";
 import { ExtendedSelectionMode } from "../editorPage";
+import { Annotation, AnnotationTag, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
@@ -22,7 +21,8 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     project: IProject;
     canvasWidth: number;
     canvasHeight: number;
-    lockedTag?: string;
+    svgFileName: string;
+    lockedTag: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedSegmentChanged?: (segment: ISegment) => void;
@@ -38,6 +38,7 @@ export interface ISegmentCanvasState {
     annotatedData: Annotation[];
     segmentationData: any; // json object
     lastSelectedTag: string;
+    gridOn: boolean;
 }
 
 export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, ISegmentCanvasState> {
@@ -48,6 +49,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         canvasHeight: 0,
         project: null,
         lockedTag: undefined,
+        svgFileName: "",
     };
 
     public state: ISegmentCanvasState = {
@@ -56,6 +58,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         enabled: true,
         annotatedData: null,
         segmentationData: null,
+        gridOn: false,
         lastSelectedTag: AnnotationTag.EMPTY,
     };
 
@@ -207,15 +210,13 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                     <div id="selection-zone">
                         <div id="editor-zone" className="full-size">
                             { this.state.segmentationData && this.props.project ?
-                            <SuperpixelCanvas id={superpixelEditorId}
-                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight}
-                                segmentationData={this.state.segmentationData}
-                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
-                                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
-                                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
-                                onSelectedTagUpdated={this.onSelectedTagUpdated} />
+                                <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
+                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)} 
+                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
+                                onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
                             : <div> segmentation is loading... </div>}
                         </div>
+
                     </div>
                 </div>
                 {this.renderChildren()}

@@ -1,3 +1,4 @@
+/*
 import { useRef } from "react";
 import { ISegmentOffset } from "../../../../../models/applicationState";
 
@@ -338,3 +339,4 @@ export const clearEditor = (canvasId: string, defaultcolor: string) => {
 const clearSuperpixel = (snapElement: Snap.Paper, defaultcolor: string, area: number, onSegmentsUpdated: ISegmentsCallback) => {
     paintSuperpixel(snapElement, AnnotationTag.DEANNOTATING, defaultcolor, area, onSegmentsUpdated);
 }
+*/
