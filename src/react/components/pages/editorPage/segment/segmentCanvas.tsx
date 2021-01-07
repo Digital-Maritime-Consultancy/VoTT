@@ -10,17 +10,19 @@ import * as shortid from "shortid";
 import { AssetPreview, ContentSource } from "../../../common/assetPreview/assetPreview";
 import Confirm from "../../../common/confirm/confirm";
 import { createContentBoundingBox } from "../../../../../common/layout";
-import { SegmentSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, clearEditor, getBoundingBox } from "./superpixelEditor";
+import { Annotation, AnnotationTag, clearEditor, exportToPng, getBoundingBox } from "./superpixelCanvas";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
-import { SuperpixelEditor } from "./superpixelEditor";
+import { SuperpixelCanvas } from "./superpixelCanvas";
+import { ExtendedSelectionMode } from "../editorPage";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
-    selectionMode: SegmentSelectionMode;
+    selectionMode: ExtendedSelectionMode;
     project: IProject;
-    lockedTag: string;
+    canvasWidth: number;
+    canvasHeight: number;
+    lockedTag?: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedSegmentChanged?: (segment: ISegment) => void;
@@ -40,8 +42,10 @@ export interface ISegmentCanvasState {
 
 export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, ISegmentCanvasState> {
     public static defaultProps: ISegmentCanvasProps = {
-        selectionMode: SegmentSelectionMode.NONE,
+        selectionMode: ExtendedSelectionMode.NONE,
         selectedAsset: null,
+        canvasWidth: 0,
+        canvasHeight: 0,
         project: null,
         lockedTag: undefined,
     };
@@ -62,6 +66,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
+    
+    private updateQueue: ISegmentOffset[] = [];
 
     public componentDidMount = () => {
         window.addEventListener("resize", this.onWindowResize);
@@ -75,17 +81,17 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     public componentDidUpdate = async (prevProps: Readonly<ISegmentCanvasProps>, prevState: Readonly<ISegmentCanvasState>) => {
         // Handles asset changing
-        if(this.props.selectedAsset.segmentationData && this.state.segmentationData === null){
+        if(this.props.project && this.props.selectedAsset.segmentationData && this.state.segmentationData === null){
             const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
-                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments),
+                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
                 segmentationData, });
             this.invalidateSelection();
         }
-        else if (this.props.selectedAsset !== prevProps.selectedAsset) {
+        else if (this.props.project && this.props.selectedAsset !== prevProps.selectedAsset) {
             const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
-                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments),
+                annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
                 segmentationData, });
             this.invalidateSelection();
         }
@@ -99,12 +105,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
         // When the selected asset has changed but is still the same asset id
         if (!assetIdChanged && this.state.currentAsset !== prevState.currentAsset) {
-            this.refreshCanvasToolsSegments();
+            // this.refreshCanvas();
         }
 
-
         // When the project tags change re-apply tags to segments
-        if (this.props.project.tags !== prevProps.project.tags) {
+        if (this.props.project && this.props.project.tags !== prevProps.project.tags) {
             this.updateCanvasToolsSegmentTags();
         }
 
@@ -112,12 +117,9 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         if (prevState.enabled !== this.state.enabled) {
             // When the canvas is ready to display
             if (this.state.enabled) {
-                //this.refreshCanvasToolsSegments();
-                //this.clearSegmentationData();
                 this.setSelectionMode(this.props.selectionMode);
-                
             } else { // When the canvas has been disabled
-                this.setSelectionMode(SegmentSelectionMode.NONE);
+                this.setSelectionMode(ExtendedSelectionMode.NONE);
             }
         }
     }
@@ -140,16 +142,21 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
     }
 
-    public setSelectionMode(segmentSelectionMode: SegmentSelectionMode){
-        if(segmentSelectionMode === SegmentSelectionMode.NONE){
+    public setSelectionMode(selectionMode: ExtendedSelectionMode){
+        if(selectionMode === ExtendedSelectionMode.NONE){
             this.updateAnnotating(AnnotationTag.EMPTY, this.defaultColor);
         }
-        else if(segmentSelectionMode === SegmentSelectionMode.DEANNOTATING){
+        else if(selectionMode === ExtendedSelectionMode.DEANNOTATING){
             this.updateAnnotating(AnnotationTag.DEANNOTATING, this.defaultColor);
         }
-        else if(segmentSelectionMode === SegmentSelectionMode.ANNOTATING){
+        else if(selectionMode === ExtendedSelectionMode.ANNOTATING){
             this.updateAnnotating(this.previousAnnotating.tag, this.previousAnnotating.color);
         }
+    }
+
+    public getAnnotating = (): ITag => {
+        const svg = document.getElementById(superpixelEditorId);
+        return svg ? { name: svg.getAttribute("color-profile"),  color: svg.getAttribute("name") } : undefined;
     }
 
     public updateAnnotating(tag: string, color: string){
@@ -198,18 +205,17 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-        <div id="editor-zone" className="full-size">
-            { this.state.segmentationData ? 
-            <SuperpixelEditor id={superpixelEditorId}
-                canvasWidth={1024} canvasHeight={768}
-                segmentationData={this.state.segmentationData}
-                annotatedData={this.decomposeSegment(this.state.currentAsset.segments)}
-                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
-                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
-                onSelectedTagUpdated={this.onSelectedTagUpdated} />
-            : <div> segmentation is loading... </div> }
-            
-        </div>
+                        <div id="editor-zone" className="full-size">
+                            { this.state.segmentationData && this.props.project ?
+                            <SuperpixelCanvas id={superpixelEditorId}
+                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight}
+                                segmentationData={this.state.segmentationData}
+                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)}
+                                defaultcolor={this.defaultColor} annotating={this.currentAnnotating}
+                                onSegmentsUpdated={this.onSegmentOffsetsUpdated}
+                                onSelectedTagUpdated={this.onSelectedTagUpdated} />
+                            : <div> segmentation is loading... </div>}
+                        </div>
                     </div>
                 </div>
                 {this.renderChildren()}
@@ -250,6 +256,18 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.onWindowResize();
     }
 
+    public refreshCanvas = () => {
+        this.clearSegmentationData();
+        /*
+        // the function currently not used
+        if (!this.state.currentAsset.segments || this.state.currentAsset.segments.length === 0) {
+            return;
+        }
+        //this.removeAllSegments(false);
+        */
+       //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
+    }
+
     private onSelectedTagUpdated = async (
         tag: string,
     ): Promise<void> => {
@@ -278,11 +296,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         return await response.json();
     }
 
-    private decomposeSegment = (segments: ISegment[]): Annotation[] => {
+    private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
         const annotation = [];
         for (const s of segments){
             for (const superpixel of s.superpixel){
-                const tag = this.props.project.tags.filter((tag) => tag.name === s.tag);
+                const tag = tags.filter((tag) => tag.name === s.tag);
                 if(tag.length > 0){
                     annotation.push(new Annotation(s.tag, tag[0].color, superpixel));
                 }
@@ -303,18 +321,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             return !segments.find((s) => s.id === assetSegment.id);
         });
         this.onSegmentsUpdated(filteredSegments);
-    }
-
-    private refreshCanvasToolsSegments = () => {
-        //forceEditorUpdate();
-        /*
-        // the function currently not used
-        if (!this.state.currentAsset.segments || this.state.currentAsset.segments.length === 0) {
-            return;
-        }
-        //this.removeAllSegments(false);
-        */
-       //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
     }
 
     private getInitialSegment = (id: number, tag: string, superpixelId: number, area: number, bbox: IBoundingBox): ISegment => {
@@ -339,7 +345,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             const addition = offset.tag !== AnnotationTag.DEANNOTATING;
             if (addition){
                 if (segments.filter((e) => e.tag === offset.tag && e.superpixel.includes(offset.superpixelId)).length > 0){ // already contains
-                    return segments;
+                    continue;
                 }
                 let founded = 0;
                 processedSegments = processedSegments.map((element): ISegment => {
@@ -351,7 +357,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         return element;
                     }
                 });
-                return founded === 1 ? processedSegments : [...segments,
+                processedSegments = founded === 1 ? processedSegments : [...segments,
                     this.getInitialSegment(shortid.generate(), offset.tag, offset.superpixelId, offset.area, { left:0, top: 0, width:0, height: 0 })];
             }
             else{ // subtraction
@@ -363,19 +369,25 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         }
                         return this.integrateOffset(element, offset, addition);
                     }
-                    else {
+                    else{
                         return element;
                     }
                 });
-                return emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
+                processedSegments = emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
             }
         }
         return processedSegments;
     }
 
-    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[]) => {
-        const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, offsets);
-        this.onSegmentsUpdated(processedSegments);
+    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
+        if (applyNow) {
+            const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
+            this.onSegmentsUpdated(processedSegments);
+            this.updateQueue = [];
+        }
+        else{
+            offsets.map((item) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
+        }
     }
 
     private renderChildren = () => {

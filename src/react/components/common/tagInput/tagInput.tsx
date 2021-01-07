@@ -2,7 +2,7 @@ import React, { KeyboardEvent, RefObject } from "react";
 import ReactDOM from "react-dom";
 import Align from "rc-align";
 import { randomIntInRange } from "../../../../common/utils";
-import { IRegion, ITag } from "../../../../models/applicationState";
+import { EditorContext, IRegion, ITag } from "../../../../models/applicationState";
 import { ColorPicker } from "../colorPicker";
 import "./tagInput.scss";
 import "../condensedList/condensedList.scss";
@@ -10,6 +10,7 @@ import TagInputItem, { ITagInputItemProps, ITagClickProps } from "./tagInputItem
 import TagInputToolbar from "./tagInputToolbar";
 import { toast } from "react-toastify";
 import { strings } from "../../../../common/strings";
+import { ExtendedSelectionMode } from "../../pages/editorPage/editorPage";
 // tslint:disable-next-line:no-var-requires
 const tagColors = require("../../common/tagColors.json");
 
@@ -53,6 +54,7 @@ export interface ITagInputState {
     editingTag: ITag;
     portalElement: Element;
     editingTagNode: Element;
+    areTagsClickable: boolean;
 }
 
 function defaultDOMNode(): Element {
@@ -72,6 +74,7 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
         editingTag: null,
         editingTagNode: null,
         portalElement: defaultDOMNode(),
+        areTagsClickable: true,
     };
 
     private tagItemRefs: Map<string, TagInputItem> = new Map<string, TagInputItem>();
@@ -153,6 +156,18 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
         if (prevProps.selectedRegions !== this.props.selectedRegions && this.props.selectedRegions.length > 0) {
             this.setState({
                 selectedTag: null,
+            });
+        }
+    }
+
+    public updateTagInput(selectionMode: ExtendedSelectionMode) {
+        if (selectionMode === ExtendedSelectionMode.ANNOTATING) {
+            this.setState({
+                areTagsClickable: true,
+            });
+        } else {
+            this.setState({
+                areTagsClickable: false,
             });
         }
     }
@@ -309,6 +324,7 @@ export class TagInput extends React.Component<ITagInputProps, ITagInputState> {
             <TagInputItem
                 key={prop.tag.name}
                 ref={(item) => this.setTagItemRef(item, prop.tag)}
+                isClickable={this.state.areTagsClickable}
                 {...prop}
             />);
     }

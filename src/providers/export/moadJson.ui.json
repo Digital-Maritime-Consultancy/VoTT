@@ -4,5 +4,8 @@
     },
     "exportIndividuals": {
         "ui:widget": "checkbox"
+    },
+    "includeSegmentAnnotatedImages": {
+        "ui:widget": "checkbox"
     }
 }

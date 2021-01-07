@@ -13,6 +13,7 @@ export class ImageAsset extends React.Component<IAssetProps> {
                 src={this.props.asset.path}
                 onLoad={this.onLoad}
                 onError={this.props.onError}
+                onDragStart={() => false}
                 crossOrigin="anonymous" />);
     }
 

@@ -12,6 +12,7 @@ export interface IMoadJsonExportProviderOptions extends IExportProviderOptions {
     /** Whether or not to include binary assets in target connection */
     includeLabelImages: boolean;
     exportIndividuals: boolean;
+    includeSegmentAnnotatedImages: boolean;
 }
 
 /**
@@ -31,13 +32,9 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         const results = await this.getAssetsForExport();
 
         if (this.options.includeLabelImages) {
-            /*
-            await results.forEachAsync(async (assetMetadata) => {
-                const arrayBuffer = await HtmlFileReader.getAssetArray(assetMetadata.asset);
-                const assetFilePath = `moad-json-export/${assetMetadata.asset.name}`;
-                await this.storageProvider.writeBinary(assetFilePath, Buffer.from(arrayBuffer));
+            results.forEachAsync(async (assetMetadata) => {
+                console.log("Export test");
             });
-            */
         }
 
         const exportObject = { ...this.project };
@@ -49,6 +46,10 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         delete exportObject.targetConnection;
         delete exportObject.exportFormat;
 
+        if (this.options.includeSegmentAnnotatedImages){
+
+        }
+
         if (this.options.exportIndividuals){
             const assets = exportObject.assets;
             const keys: string[] = [];
@@ -56,6 +57,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
                 for (let k in assets) keys.push(k);
             }
             const assetMetadata: IAssetMetadata[] = [];
+            
             keys.map( (key) => {const d: any = assets[key]; assetMetadata.push(d as IAssetMetadata)});
 
             assetMetadata.forEach(async (item) => {

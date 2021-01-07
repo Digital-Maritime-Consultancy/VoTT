@@ -125,9 +125,9 @@ export const korean: IAppStrings = {
     tags: {
         title: "태그", // Tags,
         placeholder: "새 태그 추가", // Add new tag,
-        editor: "어노테이션 편집기",  // Tags Editor,
-        editorSuperpixel: "슈퍼픽셀 어노테이션",
-        editorMetadata: "메타데이터 편집기",
+        editor: "다각형 어노테이션 편집",  // Tags Editor,
+        editorSuperpixel: "세그먼트 어노테이션 편집",
+        editorMetadata: "메타데이터 편집",
         modal: {
             name: "태그 이름", // Tag Name,
             color: "태그 색상", // Tag Color"
@@ -250,7 +250,9 @@ export const korean: IAppStrings = {
             nextAsset: "다음 Asset",  // Next Asset,
             saveProject: "프로젝트 저장", // Save Project,
             exportProject: "프로젝트 내보내기",  // Export Project,
-            activeLearning: "Active Learning",  // Active Learning"
+            activeLearning: "자동 어노테이션",  // Active Learning"
+            annotateSegments: "어노테이션 넣기",
+            removeAnnotation: "어노테이션 빼기",
         },
         videoPlayer: {
             previousTaggedFrame: {
@@ -339,6 +341,10 @@ export const korean: IAppStrings = {
                     exportIndividuals: {
                         title: "개별 파일로 산출",
                         description: "이미지 당 어노테이션 결과를 산출",
+                    },
+                    includeSegmentAnnotatedImages: {
+                        title: "세그먼트 어노테이션 이미지 (PNG) 포함",
+                        description: "학습을 위한 세그먼트 어노테이션 이미지 포함할지 여부",
                     },
                 },
             },

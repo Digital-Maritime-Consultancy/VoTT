@@ -246,6 +246,8 @@ export const spanish: IAppStrings = {
             saveProject: "Guardar Proyecto",
             exportProject: "Exprtar Proyecto",
             activeLearning: "Aprendizaje Activo",
+            annotateSegments: "Annotate Segments",
+            removeAnnotation: "Remove Annotation",
         },
         videoPlayer: {
             previousTaggedFrame: {
@@ -331,6 +333,10 @@ export const spanish: IAppStrings = {
                     exportIndividuals: {
                         title: "Export individual files",
                         description: "Export seperate files",
+                    },
+                    includeSegmentAnnotatedImages: {
+                        title: "Include segment annotation as PNG",
+                        description: "Whether or not to include segment annotation image for training",
                     },
                 },
             },

@@ -26,6 +26,8 @@ export interface ITagInputItemProps {
     isLocked: boolean;
     /** Tag is currently selected */
     isSelected: boolean;
+    /** Tag is currently clickable */
+    isClickable: boolean;
     /** Tag is currently applied to one of the selected regions */
     appliedToSelectedRegions: boolean;
     /** Function to call upon clicking item */
@@ -39,6 +41,8 @@ export interface ITagInputItemState {
     isBeingEdited: boolean;
     /** Tag is currently locked for application */
     isLocked: boolean;
+    /** Tag is currently clickable */
+    isClickable: boolean;
     /** Mode of tag editing (text or color) */
     tagEditMode: TagEditMode;
 }
@@ -48,6 +52,7 @@ export default class TagInputItem extends React.Component<ITagInputItemProps, IT
         isBeingEdited: false,
         isLocked: false,
         tagEditMode: null,
+        isClickable: true,
     };
 
     public render() {
@@ -90,31 +95,41 @@ export default class TagInputItem extends React.Component<ITagInputItemProps, IT
                 isLocked: this.props.isLocked,
             });
         }
+
+        if (prevProps.isClickable !== this.props.isClickable) {
+            this.setState({
+                isClickable: this.props.isClickable,
+            });
+        }
     }
 
     private onColorClick = (e: MouseEvent) => {
         e.stopPropagation();
 
-        const ctrlKey = e.ctrlKey || e.metaKey;
-        const altKey = e.altKey;
-        this.setState({
-            tagEditMode: TagEditMode.Color,
-        }, () => this.props.onClick(this.props.tag, { ctrlKey, altKey, clickedColor: true }));
+        if (this.state.isClickable) {
+            const ctrlKey = e.ctrlKey || e.metaKey;
+            const altKey = e.altKey;
+            this.setState({
+                tagEditMode: TagEditMode.Color,
+            }, () => this.props.onClick(this.props.tag, { ctrlKey, altKey, clickedColor: true }));
+        }
     }
 
     private onNameClick = (e: MouseEvent) => {
         e.stopPropagation();
 
-        const ctrlKey = e.ctrlKey || e.metaKey;
-        const altKey = e.altKey;
-        this.setState({
-            tagEditMode: TagEditMode.Name,
-        }, () => this.props.onClick(this.props.tag, { ctrlKey, altKey }));
+        if (this.state.isClickable) {
+            const ctrlKey = e.ctrlKey || e.metaKey;
+            const altKey = e.altKey;
+            this.setState({
+                tagEditMode: TagEditMode.Name,
+            }, () => this.props.onClick(this.props.tag, { ctrlKey, altKey }));
+        }
     }
 
     private getItemClassName = () => {
         const classNames = ["tag-item"];
-        if (this.props.isSelected) {
+        if (this.state.isClickable && this.props.isSelected) {
             classNames.push("tag-item-selected");
         }
         if (this.props.appliedToSelectedRegions) {
@@ -129,7 +144,8 @@ export default class TagInputItem extends React.Component<ITagInputItemProps, IT
             <div className={"tag-name-container"}>
                 <div className="tag-name-body">
                     {
-                        (this.state.isBeingEdited && this.state.tagEditMode === TagEditMode.Name)
+                        (this.state.isClickable && this.state.isBeingEdited &&
+                            this.state.tagEditMode === TagEditMode.Name)
                             ?
                             <input
                                 className={`tag-name-editor ${this.getContentClassName()}`}

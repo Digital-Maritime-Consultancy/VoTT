@@ -10,15 +10,23 @@ const formSchemaForSegment = {
     type: "object",
     properties: {
         tag: {
-            type: "string"
+            type: "string",
+            description: "선택된 어노테이션 태그",
         },
         iscrowd: {
             type: "boolean",
+            description: "(객체인 경우) 하나 이상의 객체가 뭉쳐져 있음",
+            enumNames: ["네", "아니오"],
             default: false,
         },
         risk: {
             type: "string",
-            enum: ["safe", "danger", "caution"],
+            description: "위험 수준",
+            oneOf: [
+                {const: "safe", title: "안전"},
+                {const: "danger", title: "위험"},
+                {const: "caution", title: "주의"},
+            ],
             default: "safe",
         }
     }
@@ -29,28 +37,58 @@ const formSchemaForRegion = {
     type: "object",
     properties: {
         tag: {
-            type: "string"
+            type: "string",
+            title: "",
+            description: "선택된 어노테이션 태그",
         },
         istruncated: {
             type: "boolean",
+            title: "",
+            description: "해당 객체의 일부분은 사진 영역 밖에 있음 (잘려있음)",
+            enumNames: ["네", "아니오"],
             default: false,
         },
         isobscured: {
             type: "boolean",
+            title: "",
+            description: "해당 객체는 다른 객체에 의해 일부가 가려져 있음",
+            enumNames: ["네", "아니오"],
             default: false,
         },
         risk: {
             type: "string",
-            enum: ["safe", "danger", "caution"],
+            title: "",
+            description: "위험 수준",
+            oneOf: [
+                {const: "safe", title: "안전"},
+                {const: "danger", title: "위험"},
+                {const: "caution", title: "주의"},
+            ],
             default: "safe",
         },
     }
 }
 
 const uiSchema =  {
+    tag: {
+        "classNames" : "minimized-control-label",
+        "ui:disabled": true,
+    },
     iscrowd: {
-      "ui:widget": "radio" // could also be "select"
-    }
+        "classNames" : "minimized-control-label",
+        "ui:widget": "radio",
+    },
+    istruncated: {
+        "classNames" : "minimized-control-label",
+        "ui:widget": "radio",
+    },
+    isobscured: {
+        "classNames" : "minimized-control-label",
+        "ui:widget": "radio",
+    },
+    risk: {
+        "classNames" : "minimized-control-label",
+    },
 };
 
 export interface IPropertyFormProps extends React.Props<PropertyForm> {
