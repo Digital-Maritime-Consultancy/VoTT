@@ -185,6 +185,14 @@
   }
 }
 
+.minimized-control-label{
+  label{
+    display: inline-block;
+    margin-bottom: 0.1rem;
+    color: grey;
+  }  
+}
+
 .video-timeline-container {
   position: absolute;
   left: 0;

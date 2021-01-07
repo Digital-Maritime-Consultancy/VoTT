@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
 import SplitPane from "react-split-pane";
 import { bindActionCreators } from "redux";
-import { SelectionMode } from "vott-ct/lib/js/CanvasTools/Interface/ISelectorSettings";
 import HtmlFileReader from "../../../../../common/htmlFileReader";
 import { strings } from "../../../../../common/strings";
 import {
@@ -42,7 +41,7 @@ import {
     IEditorPageState,
     mapStateToProps,
     mapDispatchToProps,
-    SegmentSelectionMode,
+    ExtendedSelectionMode,
 } from "../editorPage";
 import SegmentCanvas from "./segmentCanvas";
 import { AnnotationTag } from "./superpixelCanvas";
@@ -71,8 +70,7 @@ export default class EditorSegmentPage extends React.Component<
     public state: IEditorPageState = {
         selectedTag: null,
         lockedTag: undefined,
-        selectionMode: SelectionMode.NONE,
-        segmentSelectionMode: SegmentSelectionMode.NONE,
+        selectionMode: ExtendedSelectionMode.NONE,
         assets: [],
         childAssets: [],
         editorMode: EditorMode.Select,
@@ -99,6 +97,7 @@ export default class EditorSegmentPage extends React.Component<
     private canvas: RefObject<SegmentCanvas> = React.createRef();
     private renameTagConfirm: React.RefObject<Confirm> = React.createRef();
     private deleteTagConfirm: React.RefObject<Confirm> = React.createRef();
+    private tagInput: RefObject<TagInput> = React.createRef();
 
     public async componentDidMount() {
         const projectId = this.props.match.params["projectId"];
@@ -115,6 +114,8 @@ export default class EditorSegmentPage extends React.Component<
             this.props.project.activeLearningSettings,
         );
         this.onSelectedSegmentChanged = this.onSelectedSegmentChanged.bind(this);
+
+        this.onSelectionModeChanged(this.state.selectionMode);
     }
 
     public async componentDidUpdate(prevProps: Readonly<IEditorPageProps>) {
@@ -224,7 +225,7 @@ export default class EditorSegmentPage extends React.Component<
                                         onCanvasRendered={this.onCanvasRendered}
                                         onSelectedSegmentChanged={this.onSelectedSegmentChanged}
                                         selectionMode={
-                                            this.state.segmentSelectionMode
+                                            this.state.selectionMode
                                         }
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}
@@ -252,8 +253,9 @@ export default class EditorSegmentPage extends React.Component<
                                 )}
                             </div>
                         </div>
-                        <div className="editor-page-right-sidebar"> 
+                        <div className="editor-page-right-sidebar">
                             <TagInput
+                                ref={this.tagInput}
                                 tags={this.props.project.tags}
                                 lockedTag={this.state.lockedTag}
                                 selectedRegions={this.state.selectedRegions}
@@ -271,7 +273,7 @@ export default class EditorSegmentPage extends React.Component<
                                 selectedSegment={this.state.selectedSegment ? this.state.selectedSegment : undefined}
                                 onSegmentsUpdated={this.canvas && this.canvas.current ? this.canvas.current.onSegmentsUpdated : undefined}
                                 onSelectedSegmentChanged={this.onSelectedSegmentChanged}
-                                />
+                            />
                         </div>
                         <Confirm
                             title={strings.editorPage.tags.rename.title}
@@ -331,7 +333,7 @@ export default class EditorSegmentPage extends React.Component<
      */
     private onTagClicked = (tag: ITag): void => {
         if (
-            this.state.segmentSelectionMode === SegmentSelectionMode.ANNOTATING
+            this.state.selectionMode === ExtendedSelectionMode.ANNOTATING
         ) {
             this.setState(
                 {
@@ -579,6 +581,14 @@ export default class EditorSegmentPage extends React.Component<
         this.setState({ selectedSegment });
     }
 
+    private onSelectionModeChanged = async (
+        selectionMode: ExtendedSelectionMode,
+    ): Promise<void> => {
+        if (this.tagInput){
+            this.tagInput.current.updateTagInput(selectionMode);
+        }
+    }
+
     /**
      * Raised when the asset binary has been painted onto the canvas tools rendering canvas
      */
@@ -592,7 +602,18 @@ export default class EditorSegmentPage extends React.Component<
         */
     }
 
-    private onTagsChanged = async (tags) => {
+    private onTagsChanged = async (tags: ITag[]) => {
+        // apply color first when it has changed
+        this.props.project.tags.map( (tag) => {
+            const index = tags.findIndex(x => x.name === tag.name);
+            if (index >= 0 && tag.color !== tags[index].color){
+                if (this.canvas && this.canvas.current.getAnnotating() && this.canvas.current.getAnnotating().name === tag.name){
+                    this.canvas.current.updateAnnotating(tags[index].name, tags[index].color);
+                    this.canvas.current.refreshCanvas();
+                }
+            }
+        });
+
         const project = {
             ...this.props.project,
             tags,
@@ -611,23 +632,27 @@ export default class EditorSegmentPage extends React.Component<
         switch (toolbarItem.props.name) {
             case ToolbarItemName.AnnotateSegments:
                 this.setState({
-                    segmentSelectionMode: SegmentSelectionMode.ANNOTATING,
+                    selectionMode: ExtendedSelectionMode.ANNOTATING,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.ANNOTATING);
                 break;
             case ToolbarItemName.SelectCanvas:
                 this.setState({
-                    segmentSelectionMode: SegmentSelectionMode.NONE,
+                    selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.RemoveAnnotation:
                 this.setState({
-                    segmentSelectionMode: SegmentSelectionMode.DEANNOTATING,
+                    selectionMode: ExtendedSelectionMode.DEANNOTATING,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.DEANNOTATING);
                 break;
             case ToolbarItemName.ShowSegBoundary:
                 this.setState({
-                    segmentSelectionMode: SegmentSelectionMode.NONE,
+                    selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.PreviousAsset:
                 await this.goToRootAsset(-1);

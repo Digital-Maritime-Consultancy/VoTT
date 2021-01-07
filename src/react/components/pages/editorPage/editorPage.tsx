@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { RouteComponentProps } from "react-router-dom";
 import { bindActionCreators } from "redux";
-import { SelectionMode } from "vott-ct/lib/js/CanvasTools/Interface/ISelectorSettings";
 import {
     EditorMode, IApplicationState,
     IAppSettings, IAsset, IAssetMetadata, IProject, IRegion,
@@ -26,10 +25,15 @@ export interface IEditorPageProps extends RouteComponentProps {
     applicationActions: IApplicationActions;
 }
 
-export enum SegmentSelectionMode {
+export enum ExtendedSelectionMode {
     NONE = 0,
-    ANNOTATING = 1,
-    DEANNOTATING = 2,
+    POINT = 1,
+    RECT = 2,
+    COPYRECT = 3,
+    POLYLINE = 4,
+    POLYGON = 5,
+    ANNOTATING = 6,
+    DEANNOTATING = 7,
 }
 
 /**
@@ -41,9 +45,7 @@ export interface IEditorPageState {
     /** The editor mode to set for canvas tools */
     editorMode: EditorMode;
     /** The selection mode to set for canvas tools */
-    selectionMode: SelectionMode;
-    /** The selection mode to set for canvas tools */
-    segmentSelectionMode: SegmentSelectionMode;
+    selectionMode: ExtendedSelectionMode;
     /** The selected asset for the primary editing experience */
     selectedAsset?: IAssetMetadata;
     /** Currently selected region on current asset */
