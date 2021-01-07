@@ -13,7 +13,7 @@ import "../editorPage.scss";
 import EditorSideBar from "../editorSideBar";
 import Form, { IChangeEvent, ISubmitEvent } from "react-jsonschema-form";
 import Preview from "./preview";
-import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps, SegmentSelectionMode } from '../editorPage';
+import { IEditorPageProps, IEditorPageState, mapStateToProps, mapDispatchToProps } from '../editorPage';
 import Guard from "../../../../../common/guard";
 
 /**

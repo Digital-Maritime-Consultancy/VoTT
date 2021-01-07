@@ -253,6 +253,8 @@ export const chinesetw: IAppStrings = {
             saveProject: "儲存專案", // Save Project
             exportProject: "匯出專案", // Export Project
             activeLearning: "主動學習", // Active Learning
+            annotateSegments: "Annotate Segments",
+            removeAnnotation: "Remove Annotation",
         },
         videoPlayer: {
             previousTaggedFrame: {
@@ -341,6 +343,10 @@ export const chinesetw: IAppStrings = {
                     exportIndividuals: {
                         title: "Export individual files",
                         description: "Export seperate files",
+                    },
+                    includeSegmentAnnotatedImages: {
+                        title: "Include segment annotation as PNG",
+                        description: "Whether or not to include segment annotation image for training",
                     },
                 },
             },

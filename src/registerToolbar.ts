@@ -131,7 +131,7 @@ export default function registerToolbar() {
     ToolbarItemFactory.register({
         name: ToolbarItemName.AnnotateSegments,
         context: [EditorContext.Segment],
-        tooltip: strings.editorPage.toolbar.nextAsset,
+        tooltip: strings.editorPage.toolbar.annotateSegments,
         icon: "fa-paint-roller",
         group: ToolbarItemGroup.Canvas,
         type: ToolbarItemType.State,
@@ -141,21 +141,11 @@ export default function registerToolbar() {
     ToolbarItemFactory.register({
         name: ToolbarItemName.RemoveAnnotation,
         context: [EditorContext.Segment],
-        tooltip: strings.editorPage.toolbar.removeAllRegions,
+        tooltip: strings.editorPage.toolbar.removeAnnotation,
         icon: "fa-eraser",
         group: ToolbarItemGroup.Canvas,
         type: ToolbarItemType.State,
         accelerators: ["Z", "z"],
-    });
-
-    ToolbarItemFactory.register({
-        name: ToolbarItemName.ShowSegBoundary,
-        context: [EditorContext.Segment],
-        tooltip: strings.editorPage.toolbar.copy,
-        icon: "fa-eye",
-        group: ToolbarItemGroup.Canvas,
-        type: ToolbarItemType.State,
-        accelerators: ["B", "b"],
     });
 
     ToolbarItemFactory.register({

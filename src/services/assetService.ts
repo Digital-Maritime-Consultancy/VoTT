@@ -177,8 +177,6 @@ export class AssetService {
             .sort((a, b) => a.timestamp - b.timestamp);
     }
 
-    ////////////////////////////////////////////////////////////////
-    // WARNING: should be updated
     /**
      * Save metadata for asset
      * @param metadata - Metadata for asset
@@ -190,7 +188,8 @@ export class AssetService {
 
         // Only save asset metadata if asset is in a tagged state
         // Otherwise primary asset information is already persisted in the project file.
-        if (metadata.asset.state[EditorContext.Geometry] === AssetState.Tagged) {
+        if (metadata.asset.state[EditorContext.Geometry] === AssetState.Tagged ||
+            metadata.asset.state[EditorContext.Segment] === AssetState.Tagged) {
             await this.storageProvider.writeText(fileName, JSON.stringify(metadata, null, 4));
         } else {
             // If the asset is no longer tagged, then it doesn't contain any regions

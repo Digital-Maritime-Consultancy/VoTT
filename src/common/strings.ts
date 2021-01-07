@@ -247,6 +247,8 @@ export interface IAppStrings {
             saveProject: string;
             exportProject: string;
             activeLearning: string;
+            annotateSegments: string;
+            removeAnnotation: string;
         }
         videoPlayer: {
             nextTaggedFrame: {
@@ -327,6 +329,10 @@ export interface IAppStrings {
                         description: string,
                     },
                     exportIndividuals: {
+                        title: string,
+                        description: string,
+                    },
+                    includeSegmentAnnotatedImages: {
                         title: string,
                         description: string,
                     },
