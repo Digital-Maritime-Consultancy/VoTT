@@ -44,8 +44,8 @@ import {
     ExtendedSelectionMode,
 } from "../editorPage";
 import SegmentCanvas from "./segmentCanvas";
-import { AnnotationTag } from "./superpixelCanvas";
 import PropertyForm from "../../../common/propertyForm/propertyForm";
+import { AnnotationTag } from "./superpixel-canvas/superpixelCanvas";
 
 /**
  * Properties for Editor Page

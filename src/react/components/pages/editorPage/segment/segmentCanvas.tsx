@@ -13,7 +13,7 @@ import { createContentBoundingBox } from "../../../../../common/layout";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { ExtendedSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
+import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
@@ -216,7 +216,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                                 onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
                             : <div> segmentation is loading... </div>}
                         </div>
-
                     </div>
                 </div>
                 {this.renderChildren()}
@@ -311,7 +310,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     private removeAllSegments = (removeState: boolean = true) => {
-        clearEditor(superpixelEditorId, this.defaultColor);
+        clearCanvas(superpixelEditorId, this.defaultColor);
         if (removeState) {
             this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
         }

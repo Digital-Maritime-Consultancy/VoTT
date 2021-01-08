@@ -24,8 +24,8 @@ const annotatedOpacity = 0.7;
 const annotatingOpacity = 0.9;
 const defaultLineWidth = 0;
 const highlightLineWidth = 2;
-const canvasContainerId = "canvasContainer";
-const canvasGridId = "canvasGrid";
+const canvasContainerId = "canvas-container";
+const canvasGridId = "canvas-grid";
 const gridLineWidth = 0.5;
 const gridOpacity = 0.8;
 
@@ -72,20 +72,27 @@ export const SPId2number = (spId: string): number => {
     return spId.startsWith("sp") ? parseInt(spId.substr(2)) : -1;
 }
 
-const configureSvg = (svgElement: HTMLElement) => {
+const configureSvg = (svgElement: HTMLElement, empty: boolean) => {
     const svg: Element = svgElement.firstElementChild;
     const children = svg.children;
     for (var i=0; i< children.length ; i++){
-        children[i].setAttribute("style", "stroke-width: 0; opacity: 1;");
+        if ( empty ){
+            children[i].setAttribute("fill", "#000000");
+            children[i].setAttribute("tag", "empty");
+            children[i].setAttribute("name", "empty");
+            children[i].setAttribute("style", `stroke-width: 0; opacity: ${defaultOpacity};`);
+        }else{
+            children[i].setAttribute("style", "stroke-width: 0; opacity: 1;");
+        }
     }
     return svg;
 }
 
-const prepare2Export = (canvasId: string) => {
+const prepare2Export = (canvasId: string, empty: boolean = false) => {
     const newElement = document.createElement("exportSvg");
     const clonedNode = document.getElementById(canvasId).cloneNode(true);
     newElement.appendChild(clonedNode);
-    return configureSvg(newElement);
+    return configureSvg(newElement, empty);
 }
 
 export const exportToPng = (canvasId: string, fileName: string, backgroundColor: string = "#000000", callback?: (fileName: string, content: string) => any) => {
@@ -112,8 +119,8 @@ export const exportToSvg = (canvasId: string, fileName: string, callback?: (file
     }
 }
 
-export const getSvgUrl = (canvasId:string): string => {
-    const content = prepare2Export(canvasId).outerHTML!;
+export const getSvgUrl = (canvasId:string, empty: boolean = false): string => {
+    const content = prepare2Export(canvasId, empty).outerHTML!;
     var file = new Blob([content], { type: 'image/svg+xml' });
     return URL.createObjectURL(file);
 }
@@ -140,7 +147,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 s.append( data );
                 setLoaded(true);
             }
-        }        
+        }
         else{
             setSvgNotExist(true);
         }
@@ -175,12 +182,12 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
     }, [loaded, svgNotExist, gridReady, createdSvg]);
     
     return (
-        <div id={canvasContainerId}>
+        <div id={canvasContainerId} className={"img-overlay-wrap"}>
             { createdSvg }
             { loaded &&
-                <CanvasGridProvider id={canvasGridId} canvasId={id} gridOn={gridOn} gridLineWidth={gridLineWidth} gridOpacity={gridOpacity} onGridReady={() => setGridReady(true)}/>}
-        </div>
-        );
+                <CanvasGridProvider id={canvasGridId} canvasId={id} gridOn={gridOn}
+                gridLineWidth={gridLineWidth} gridOpacity={gridOpacity} onGridReady={() => setGridReady(true)}/>}
+        </div>);
 }
 
 export const getBoundingBox = (canvasId: string, ids: number[]) => {

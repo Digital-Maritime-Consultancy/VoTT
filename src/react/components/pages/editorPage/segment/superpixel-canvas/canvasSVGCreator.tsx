@@ -137,5 +137,5 @@ export const CanvasSVGCreator: React.FC<CanvasSVGCreatorProps> =
     const viewBoxString = [0, 0, canvasWidth, canvasHeight].join(
         " "
     );
-    return <svg xmlnsXlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width={canvasWidth} height={canvasHeight} key={id} id={id} colorProfile={AnnotationTag.EMPTY} name={defaultColor} viewBox={viewBoxString}></svg>
+    return <svg onDragStart={() => false} xmlnsXlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" key={id} id={id} colorProfile={AnnotationTag.EMPTY} name={defaultColor} viewBox={viewBoxString}></svg>
 }
