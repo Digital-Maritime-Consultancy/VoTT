@@ -26,16 +26,14 @@ const updateSuperpixelSVG = (component: Snap.Element, fill: string, opacity: num
     }
 }
 
-const paintAndUpdateState = (event: MouseEvent, superpixel: any, defaultcolor: string, defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, onSegmentsUpdated: ISegmentsCallback) => {
-    const annotatingTag = superpixel.parent().attr()["color-profile"];
+const paintAndUpdateState = (event: MouseEvent, superpixel: any, annotatingTag: string, fillColor: string, defaultcolor: string, defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, onSegmentsUpdated: ISegmentsCallback) => {
     if(event.buttons === 1 && annotatingTag !== AnnotationTag.EMPTY){
-        const fillColor: string = superpixel.parent().attr()["name"];
         paintSuperpixel(superpixel, annotatingTag, fillColor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
-        superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}); // storing color
+        //superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}); // storing color
     }
     else if(event.buttons === 2 && annotatingTag !== AnnotationTag.EMPTY){ // removing
         clearSuperpixel(superpixel, defaultcolor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated); // area should be updated
-        superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultcolor}); // storing color
+        //superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultcolor}); // storing color
     }
 };
 
@@ -52,7 +50,7 @@ export const paintSuperpixel =
         const coloringTag = tag === AnnotationTag.DEANNOTATING ? AnnotationTag.EMPTY : tag;
         updateSuperpixelSVG(snapElement, color, coloringTag === AnnotationTag.EMPTY ? defaultOpacity : annotatedOpacity,
             defaultLineWidth, coloringTag, tag === AnnotationTag.DEANNOTATING ? AnnotationTag.EMPTY : color);
-            onSegmentsUpdated([{tag, area, superpixelId: SPId2number(snapElement.attr("id")) }]);
+        onSegmentsUpdated([{tag, area, superpixelId: SPId2number(snapElement.attr("id")) }]);
     }
     else{
         console.log("ERROR: a superpixel was not able to find!");
@@ -63,7 +61,8 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
     defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, annotatingOpacity: number, highlightLineWidth: number,
     onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void
     ) => {
-        superpixel.mouseover( () => {
+        superpixel.mouseover( (event: MouseEvent) => {
+            if (event.buttons > 0) { return ; }
             const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
             const currentColor = superpixel.attr().name;
             const fillColor = document.getElementById(canvasId).getAttribute("name")!;
@@ -73,9 +72,10 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                     annotatingTag === AnnotationTag.DEANNOTATING ? defaultColor : fillColor,
                     annotatingTag === AnnotationTag.DEANNOTATING ? defaultOpacity : annotatingOpacity,
                     highlightLineWidth);
-                }  
+                }
             })
-            .mouseout( () => {
+            .mouseout( (event: MouseEvent) => {
+                if (event.buttons > 0) { return ; }
                 const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
                 const currentColor = superpixel.attr().name;
                 if(annotatingTag !== AnnotationTag.EMPTY){
@@ -87,14 +87,21 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 }
             })
             .mousemove( (event: MouseEvent) => {
-                paintAndUpdateState(event, superpixel, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+                const annotatingTag = superpixel.parent().attr()["color-profile"];
+                const fillColor: string = superpixel.parent().attr()["name"];
+                paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
             })
             .mousedown( (event: MouseEvent) => {
-                paintAndUpdateState(event, superpixel, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+                const annotatingTag = superpixel.parent().attr()["color-profile"];
+                const fillColor: string = superpixel.parent().attr()["name"];
+                paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+                event.buttons === 2 ? superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultColor})
+                 : superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}) // storing color
             })
             .mouseup( (event: MouseEvent) => {
                 const tag: string = superpixel.attr()["tag"];
                 onSelectedTagUpdated(tag);
+                onSegmentsUpdated([], true);
             }).drag( () => false, ()=>false, ()=>false);
     return superpixel;
 }

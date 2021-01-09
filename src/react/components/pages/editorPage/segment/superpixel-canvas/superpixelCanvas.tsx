@@ -24,7 +24,7 @@ const annotatedOpacity = 0.7;
 const annotatingOpacity = 0.9;
 const defaultLineWidth = 0;
 const highlightLineWidth = 2;
-const canvasContainerId = "canvas-container";
+const canvasContainerId = "editor-zone";
 const canvasGridId = "canvas-grid";
 const gridLineWidth = 0.5;
 const gridOpacity = 0.8;
@@ -179,10 +179,10 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 onCanvasLoaded();
             }
         }
-    }, [loaded, svgNotExist, gridReady, createdSvg]);
+    }, [loaded, svgNotExist, gridReady, annotatedData]);
     
     return (
-        <div id={canvasContainerId} className={"img-overlay-wrap"}>
+        <div id={canvasContainerId} className={"full-size img-overlay-wrap"}>
             { createdSvg }
             { loaded &&
                 <CanvasGridProvider id={canvasGridId} canvasId={id} gridOn={gridOn}
@@ -205,7 +205,7 @@ export const clearCanvas = (canvasId: string, defaultcolor: string) => {
     const paths = s.selectAll('path');
     paths.forEach(function(element: Snap.Set){
         const e = element.attr;
-        element.attr({...e, name: AnnotationTag.EMPTY, tag: AnnotationTag.EMPTY, fill: defaultcolor, style: `stroke-width: ${defaultLineWidth}; opacity: ${defaultOpacity};`,});
+        element.attr({...e, name: AnnotationTag.EMPTY, tag: AnnotationTag.EMPTY, fill: defaultcolor,
+            style: `stroke-width: ${defaultLineWidth}; opacity: ${defaultOpacity};`,});
     }, this);
 }
-

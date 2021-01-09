@@ -208,14 +208,12 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-                        <div id="editor-zone" className="full-size">
-                            { this.state.segmentationData && this.props.project ?
-                                <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
-                                annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)} 
-                                canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                                onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
-                            : <div> segmentation is loading... </div>}
-                        </div>
+                        { this.state.segmentationData && this.props.project ?
+                            <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
+                            annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)} 
+                            canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
+                            onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
+                        : <div> segmentation is loading... </div>}
                     </div>
                 </div>
                 {this.renderChildren()}
@@ -381,12 +379,12 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
         if (applyNow) {
-            const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
-            this.onSegmentsUpdated(processedSegments);
+            //const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
+            //this.onSegmentsUpdated(processedSegments);
             this.updateQueue = [];
         }
         else{
-            offsets.map((item) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
+            //offsets.forEach((item: ISegmentOffset) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
         }
     }
 
