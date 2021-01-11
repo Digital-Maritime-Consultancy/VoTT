@@ -1,4 +1,5 @@
-import { AnnotationTag, ITag, SPId2number, } from "./superpixelCanvas";
+import { ISegmentOffset } from "../../../../../../models/applicationState";
+import { AnnotationTag, SPId2number, } from "./superpixelCanvas";
 const Snap = require("snapsvg-cjs");
 
 export const updateSVGEvent = (canvasContainerId: string, canvasId: string, defaultColor: string,
@@ -29,15 +30,15 @@ const updateSuperpixelSVG = (component: Snap.Element, fill: string, opacity: num
 const paintAndUpdateState = (event: MouseEvent, superpixel: any, annotatingTag: string, fillColor: string, defaultcolor: string, defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, onSegmentsUpdated: ISegmentsCallback) => {
     if(event.buttons === 1 && annotatingTag !== AnnotationTag.EMPTY){
         paintSuperpixel(superpixel, annotatingTag, fillColor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
-        //superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}); // storing color
     }
     else if(event.buttons === 2 && annotatingTag !== AnnotationTag.EMPTY){ // removing
         clearSuperpixel(superpixel, defaultcolor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated); // area should be updated
-        //superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultcolor}); // storing color
     }
 };
 
-type ISegmentsCallback = (segments: ITag[]) => void;
+type ISegmentsCallback = (segments: ISegmentOffset[]) => void;
+
+let clicked = false;
 
 export const paintSuperpixel =
         (snapElement: Snap.Paper, tag: string, color: string, area: number,
@@ -97,11 +98,15 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
                 event.buttons === 2 ? superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultColor})
                  : superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}) // storing color
+                clicked = true;
             })
             .mouseup( (event: MouseEvent) => {
-                const tag: string = superpixel.attr()["tag"];
-                onSelectedTagUpdated(tag);
-                onSegmentsUpdated([], true);
+                if (clicked){
+                    const tag: string = superpixel.attr()["tag"];
+                    onSelectedTagUpdated(tag);
+                    onSegmentsUpdated([], true);
+                    clicked = false;
+                }
             }).drag( () => false, ()=>false, ()=>false);
     return superpixel;
 }
