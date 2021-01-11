@@ -1,5 +1,6 @@
 import React, { Fragment, ReactElement } from "react";
 import {
+    EditorContext,
     EditorMode, IAssetMetadata,
     IBoundingBox,
     IProject,
@@ -13,7 +14,7 @@ import { createContentBoundingBox } from "../../../../../common/layout";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { ExtendedSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
+import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, getSegmentsFromSvg, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
@@ -37,7 +38,6 @@ export interface ISegmentCanvasState {
     enabled: boolean;
     annotatedData: Annotation[];
     segmentationData: any; // json object
-    lastSelectedTag: string;
     gridOn: boolean;
 }
 
@@ -59,22 +59,20 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         annotatedData: null,
         segmentationData: null,
         gridOn: false,
-        lastSelectedTag: AnnotationTag.EMPTY,
     };
 
     public defaultColor = "black";
 
-    private currentAnnotating = new Annotation( AnnotationTag.EMPTY, this.defaultColor);
     private previousAnnotating = new Annotation( AnnotationTag.EMPTY, this.defaultColor);
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
     
     private updateQueue: ISegmentOffset[] = [];
+    private lastSelectedTag: string = AnnotationTag.EMPTY;
 
     public componentDidMount = () => {
         window.addEventListener("resize", this.onWindowResize);
-
         this.onSegmentsUpdated = this.onSegmentsUpdated.bind(this);
     }
 
@@ -92,6 +90,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             this.invalidateSelection();
         }
         else if (this.props.project && this.props.selectedAsset !== prevProps.selectedAsset) {
+            this.setState({segmentationData: null});
             const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
@@ -128,7 +127,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public invalidateSelection() {
-        this.setState( { lastSelectedTag: AnnotationTag.EMPTY } );
+        this.lastSelectedTag = AnnotationTag.EMPTY;
     }
 
     ////////////////////////////////////////////////////////////////
@@ -226,19 +225,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
      * @param segments
      * @param selectedRegions
      */
-    public onSegmentsUpdated = (segmentsOriginal: ISegment[], needToIntegrate: boolean = false) => {
-        let segments = segmentsOriginal;
-        if (needToIntegrate){
-            segments = this.state.currentAsset.segments;
-            segments = segments.map( (element) => {
-                for (const segment of segmentsOriginal){
-                    if (segment.id === element.id){
-                        return segment;
-                    }
-                }
-                return element;
-            });
-        }
+    public onSegmentsUpdated = (segments: ISegment[]) => {
         const currentAsset: IAssetMetadata = {
             ...this.state.currentAsset,
             segments,
@@ -269,12 +256,12 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     private onSelectedTagUpdated = async (
         tag: string,
     ): Promise<void> => {
-        if (tag) {
+        if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) {
             const selectedSegment = this.getSelectedSegment(tag);
-            if (this.props.onSelectedSegmentChanged && this.state.lastSelectedTag !== tag) {
+            if (this.props.onSelectedSegmentChanged && this.lastSelectedTag !== tag) {
                 this.props.onSelectedSegmentChanged(selectedSegment);
             }
-            this.setState( {... this.state, lastSelectedTag: tag} );
+            this.lastSelectedTag = tag;
         }
     }
 
@@ -321,70 +308,33 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.onSegmentsUpdated(filteredSegments);
     }
 
-    private getInitialSegment = (id: number, tag: string, superpixelId: number, area: number, bbox: IBoundingBox): ISegment => {
-        return { id: id.toString(), tag, superpixel: [superpixelId], area, boundingBox: bbox, iscrowd: 0, risk: "safe" };
-    }
-
-    private integrateOffset(segment: ISegment, offset: ISegmentOffset, toBeAdded: boolean = true){
-        if (!toBeAdded && segment.area - offset.area <= 0){
-            return undefined;
-        }
-        const newSuperpixel = toBeAdded ? [...segment.superpixel, offset.superpixelId]
-        : segment.superpixel.filter((element) => element !== offset.superpixelId);
-        return {... segment, area: toBeAdded ? segment.area + offset.area : segment.area - offset.area,
-            superpixel: newSuperpixel,
-            boundingBox: getBoundingBox(superpixelEditorId, newSuperpixel),
-        };
-    }
-
-    private projectSegmentOffsets = (segments: ISegment[], offsets: ISegmentOffset[]): ISegment[] => {
-        let processedSegments = segments;
-        for (const offset of offsets){
-            const addition = offset.tag !== AnnotationTag.DEANNOTATING;
-            if (addition){
-                if (segments.filter((e) => e.tag === offset.tag && e.superpixel.includes(offset.superpixelId)).length > 0){ // already contains
-                    continue;
+    private updateFromSvg = () => {
+        const segments = getSegmentsFromSvg(superpixelEditorId);
+        if (segments.length > 0 || this.state.currentAsset.segments.length > 0){
+            const integratedSegments = segments.map( (e) => {
+                const getElementWithSameTag = (s) => {
+                    return s.tag === e.tag;
                 }
-                let founded = 0;
-                processedSegments = processedSegments.map((element): ISegment => {
-                    if (element.tag === offset.tag){
-                        founded = 1;
-                        return this.integrateOffset(element, offset, addition);
-                    }
-                    else {
-                        return element;
-                    }
-                });
-                processedSegments = founded === 1 ? processedSegments : [...segments,
-                    this.getInitialSegment(shortid.generate(), offset.tag, offset.superpixelId, offset.area, { left:0, top: 0, width:0, height: 0 })];
-            }
-            else{ // subtraction
-                let emptyId = "";
-                processedSegments = processedSegments.map((element): ISegment => {
-                    if (element.superpixel.includes(offset.superpixelId)){
-                        if (element.area - offset.area === 0 || (element.superpixel.length===1 && element.superpixel.includes(offset.superpixelId))){
-                            emptyId = element.id;
-                        }
-                        return this.integrateOffset(element, offset, addition);
-                    }
-                    else{
-                        return element;
-                    }
-                });
-                processedSegments = emptyId === "" ? processedSegments : segments.filter((element) => (element.id !== emptyId));
-            }
+                const findOne = this.state.currentAsset.segments.find(getElementWithSameTag);
+                if (findOne) {
+                    e.id = findOne.id;
+                    e.risk = findOne.risk;
+                    e.iscrowd = findOne.iscrowd;
+                } else {
+                    e.id = shortid.generate();
+                }
+                return e;
+            });
+            this.onSegmentsUpdated(integratedSegments);
         }
-        return processedSegments;
     }
 
     private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
         if (applyNow) {
-            //const processedSegments = this.projectSegmentOffsets(this.state.currentAsset.segments, this.updateQueue);
-            //this.onSegmentsUpdated(processedSegments);
-            this.updateQueue = [];
+            this.updateFromSvg();
         }
         else{
-            //offsets.forEach((item: ISegmentOffset) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
+            offsets.forEach((item: ISegmentOffset) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
         }
     }
 

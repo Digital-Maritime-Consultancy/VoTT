@@ -1,3 +1,4 @@
+import { ISegment } from "../../../../../../models/applicationState";
 import { annotateCanvas } from "./canvasAnnotator";
 import { updateSVGEvent } from "./canvasEventLinker";
 import { CanvasGridProvider } from "./canvasGridProvider";
@@ -11,12 +12,6 @@ const svgToPng = require("save-svg-as-png");
 export enum AnnotationTag{
   EMPTY = "empty",
   DEANNOTATING = "deannotating",
-}
-
-export interface ITag {
-  tag: string;
-  superpixelId: number;
-  area: number;
 }
 
 const defaultOpacity = 0.1;
@@ -70,6 +65,37 @@ export const number2SPId = (id: number): string => {
 
 export const SPId2number = (spId: string): number => {
     return spId.startsWith("sp") ? parseInt(spId.substr(2)) : -1;
+}
+
+export const getSegmentsFromSvg = (canvasId: string): ISegment[] => {
+    const s = Snap("#"+canvasId);
+    if (!s) {
+        return [];
+    }
+    const paths = s.selectAll('path');
+    let segments: { [id: string] : ISegment; } = {};
+    paths.forEach((element: Snap.Set) => {
+        if (element.attr('tag') !== AnnotationTag.EMPTY){
+            const tag = element.attr('tag');
+            if (segments[tag] ){
+                segments[tag].area += parseInt(element.attr('area'));
+                segments[tag].superpixel.push(SPId2number(element.attr('id')));
+            }
+            else {
+                segments[tag] = {id: '', 
+                    tag: tag,
+                    superpixel: [SPId2number(element.attr('id'))],
+                    area: parseInt(element.attr('area')),
+                    boundingBox: undefined,
+                    iscrowd: 0,
+                    risk: "safe"};
+            }
+        }
+    }, this);
+
+    const segmentsArray = Object.values(segments);
+    segmentsArray.forEach( (e) => e.boundingBox = getBoundingBox(canvasId, e.superpixel));
+    return segmentsArray;
 }
 
 const configureSvg = (svgElement: HTMLElement, empty: boolean) => {
@@ -179,8 +205,8 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 onCanvasLoaded();
             }
         }
-    }, [loaded, svgNotExist, gridReady, annotatedData]);
-    
+    }, [loaded, svgNotExist, gridReady, segmentationData, annotatedData]);
+
     return (
         <div id={canvasContainerId} className={"full-size img-overlay-wrap"}>
             { createdSvg }
