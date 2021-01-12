@@ -158,6 +158,31 @@ export function loadSegmentationData(project: IProject): (dispatch: Dispatch) =>
  * Gets metadata from project, dispatches load assets action and returns assets
  * @param project - Project from which to load assets
  */
+export function loadSvg(project: IProject): (dispatch: Dispatch) => Promise<object> {
+    return async (dispatch: Dispatch) => {
+        const assetService = new AssetService(project);
+        const assets = await assetService.getSvg();
+        dispatch(loadSvgAction(assets));
+        return assets;
+    };
+}
+
+/**
+ * Gets metadata from project, dispatches load assets action and returns assets
+ * @param project - Project from which to load assets
+ */
+export function saveSvg(project: IProject, fileName: string, content: string): (dispatch: Dispatch) => Promise<void> {
+    return async (dispatch: Dispatch) => {
+        const assetService = new AssetService(project);
+        const svg = await assetService.saveSvg(fileName, content);
+        dispatch(saveSvgAction(svg));
+    };
+}
+
+/**
+ * Gets metadata from project, dispatches load assets action and returns assets
+ * @param project - Project from which to load assets
+ */
 export function loadImageMetadata(project: IProject, filePath: string): (dispatch: Dispatch) => Promise<object> {
     return async (dispatch: Dispatch) => {
         const imageMetadataService = new ImageMetadataService(project);
@@ -169,7 +194,8 @@ export function loadImageMetadata(project: IProject, filePath: string): (dispatc
  * Gets metadata from project, dispatches load assets action and returns assets
  * @param project - Project from which to load assets
  */
-export function saveImageMetadata(project: IProject, filePath: string, content: object): (dispatch: Dispatch) => Promise<void> {
+export function saveImageMetadata(project: IProject,
+    filePath: string, content: object): (dispatch: Dispatch) => Promise<void> {
     return async (dispatch: Dispatch) => {
         const imageMetadataService = new ImageMetadataService(project);
         return await imageMetadataService.saveImageMetadata(filePath, content);
@@ -340,7 +366,21 @@ export interface ILoadSegmentationDataAction extends IPayloadAction<string, IAss
 }
 
 /**
- * Load segmentation data action type
+ * Load svg action type
+ */
+export interface ILoadSvgAction extends IPayloadAction<string, object> {
+    type: ActionTypes.LOAD_SVG_SUCCESS;
+}
+
+/**
+ * Save svg action type
+ */
+export interface ISaveSvgAction extends IPayloadAction<string, string> {
+    type: ActionTypes.SAVE_SVG_SUCCESS;
+}
+
+/**
+ * Load image metadata action type
  */
 export interface ILoadImageMetadataAction extends IPayloadAction<string, object> {
     type: ActionTypes.LOAD_IMAGE_METADATA_SUCCESS;
@@ -407,6 +447,16 @@ export const loadProjectAssetsAction =
  */
 export const loadSegmentationDataAction =
     createPayloadAction<ILoadSegmentationDataAction>(ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS);
+/**
+ * Instance of Load Metadata action
+ */
+export const loadSvgAction =
+    createPayloadAction<ILoadSvgAction>(ActionTypes.LOAD_SVG_SUCCESS);
+/**
+ * Instance of Load Metadata action
+ */
+export const saveSvgAction =
+    createPayloadAction<ISaveSvgAction>(ActionTypes.SAVE_SVG_SUCCESS);
 /**
  * Instance of Load Metadata action
  */

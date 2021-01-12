@@ -99,6 +99,7 @@ export class AssetService {
 
     private assetProviderInstance: IAssetProvider;
     private segmentationDataProviderInstance: IAssetProvider;
+    private svgProviderInstance: IAssetProvider;
     private storageProviderInstance: IStorageProvider;
 
     constructor(private project: IProject) {
@@ -134,6 +135,20 @@ export class AssetService {
     }
 
     /**
+     * Get Asset Provider from project's source connction
+     */
+    protected get svgProvider(): IAssetProvider {
+        if (!this.svgProviderInstance) {
+            this.svgProviderInstance = AssetProviderFactory.create(
+                this.project.metadataConnection.providerType,
+                this.project.metadataConnection.providerOptions,
+            );
+
+            return this.svgProviderInstance;
+        }
+    }
+
+    /**
      * Get Storage Provider from project's target connection
      */
     protected get storageProvider(): IStorageProvider {
@@ -161,6 +176,13 @@ export class AssetService {
     }
 
     /**
+     * Get segmentation data from provider
+     */
+    public async getSvg(): Promise<IAsset[]> {
+        return await this.svgProvider.getAssets();
+    }
+
+    /**
      * Get a list of child assets associated with the current asset
      * @param rootAsset The parent asset to search
      */
@@ -175,6 +197,23 @@ export class AssetService {
             .values(this.project.assets)
             .filter((asset) => asset.parent && asset.parent.id === rootAsset.id)
             .sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    /**
+     * Save metadata for asset
+     * @param metadata - Metadata for asset
+     */
+    public async saveSvg(fileName: string, content: string): Promise<string> {
+        Guard.null(content);
+        const fileNameWithExtension = `${fileName}.svg`;
+
+        try {
+            const buf = Buffer.from(content);
+            await this.storageProvider.writeBinary(fileName, buf);
+        } catch (err) {
+            // The file may not exist - that's OK
+        }
+        return fileNameWithExtension;
     }
 
     /**
@@ -221,6 +260,7 @@ export class AssetService {
                     regions: await this.getRegionsFromTFRecord(asset),
                     segments: await this.getSegmentsFromTFRecord(asset),
                     segmentationData: undefined,
+                    svg: undefined,
                     version: appInfo.version,
                 };
             } else {
@@ -229,6 +269,7 @@ export class AssetService {
                     regions: [],
                     segments: [],
                     segmentationData: undefined,
+                    svg: undefined,
                     version: appInfo.version,
                 };
             }

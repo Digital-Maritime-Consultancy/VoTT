@@ -166,6 +166,20 @@ export default class MockFactory {
                     },
                 };
                 break;
+            case AssetType.SvgImage:
+                testAsset = {
+                    id: `svg-${name}`,
+                    format: "svg",
+                    name: `svg-${name}.svg`,
+                    path: `${path}.svg`,
+                    state: assetState,
+                    type: assetType,
+                    size: {
+                        width: 800,
+                        height: 600,
+                    },
+                };
+                break;
             default:
                 testAsset = {
                     id: `asset-${name}`,
@@ -315,13 +329,14 @@ export default class MockFactory {
      * @param asset Test asset
      */
     public static createTestAssetMetadata(
-        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], metadata?: IImageMetadata, segmentationData?: IAsset): IAssetMetadata {
+        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], segmentationData?: IAsset, svg?: IAsset): IAssetMetadata {
         return {
             asset: asset || MockFactory.createTestAsset(),
             regions: regions || [],
             segments: segments || [],
             version: appInfo.version,
             segmentationData: segmentationData || MockFactory.createTestAsset("string-seg",AssetState.NotVisited, "", AssetType.SegmentationData),
+            svg: svg || MockFactory.createTestAsset("string-svg", AssetState.NotVisited, "", AssetType.SvgImage),
         };
     }
 

@@ -292,6 +292,7 @@ export interface IAssetMetadata {
     segments: ISegment[];
     version: string;
     segmentationData?: IAsset;
+    svg: IAsset;
 }
 
 /**
@@ -394,6 +395,7 @@ export enum AssetType {
     TFRecord = 4,
     SegmentationData = 5,
     ImageMetadata = 6,
+    SvgImage = 7,
 }
 
 /**
