@@ -100,8 +100,8 @@ export class AssetService {
     }
 
     private assetProviderInstance: IAssetProvider;
-    private segmentationDataProviderInstance: IAssetProvider;
-    private svgProviderInstance: IAssetProvider;
+    private metadataImportProviderInstance: IAssetProvider;
+    private metadataExportProviderInstance: IStorageProvider;
     private storageProviderInstance: IStorageProvider;
 
     constructor(private project: IProject) {
@@ -125,28 +125,28 @@ export class AssetService {
     /**
      * Get Asset Provider from project's source connction
      */
-    protected get segmentationDataProvider(): IAssetProvider {
-        if (!this.segmentationDataProviderInstance) {
-            this.segmentationDataProviderInstance = AssetProviderFactory.create(
+    protected get metadataImportProvider(): IAssetProvider {
+        if (!this.metadataImportProviderInstance) {
+            this.metadataImportProviderInstance = AssetProviderFactory.create(
                 this.project.metadataConnection.providerType,
                 this.project.metadataConnection.providerOptions,
             );
 
-            return this.segmentationDataProviderInstance;
+            return this.metadataImportProviderInstance;
         }
     }
 
     /**
      * Get Asset Provider from project's source connction
      */
-    protected get svgProvider(): IAssetProvider {
-        if (!this.svgProviderInstance) {
-            this.svgProviderInstance = AssetProviderFactory.create(
+    protected get metadataExportProvider(): IStorageProvider {
+        if (!this.metadataExportProviderInstance) {
+            this.metadataExportProviderInstance = StorageProviderFactory.create(
                 this.project.metadataConnection.providerType,
                 this.project.metadataConnection.providerOptions,
             );
 
-            return this.svgProviderInstance;
+            return this.metadataExportProviderInstance;
         }
     }
 
@@ -174,7 +174,7 @@ export class AssetService {
      * Get segmentation data from provider
      */
     public async getSegmentationData(): Promise<IAsset[]> {
-        const assets = await this.segmentationDataProvider.getAssets();
+        const assets = await this.metadataImportProvider.getAssets();
         return assets.filter((e) => e.format === 'seg');
     }
 
@@ -182,7 +182,7 @@ export class AssetService {
      * Get segmentation data from provider
      */
     public async getSvg(): Promise<IAsset[]> {
-        const assets = await this.svgProvider.getAssets();
+        const assets = await this.metadataImportProvider.getAssets();
         return assets.filter((e) => e.format === 'svg');
     }
 
@@ -209,15 +209,14 @@ export class AssetService {
      */
     public async saveSvg(fileName: string, content: string): Promise<string> {
         Guard.null(content);
-        const fileNameWithExtension = `${fileName}.svg`;
 
         try {
             const buf = Buffer.from(content);
-            await this.storageProvider.writeBinary(fileName, buf);
+            await this.metadataExportProvider.writeBinary(fileName, buf);
         } catch (err) {
             // The file may not exist - that's OK
         }
-        return fileNameWithExtension;
+        return fileName;
     }
 
     /**

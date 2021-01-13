@@ -224,6 +224,7 @@ export default class EditorSegmentPage extends React.Component<
                                         }
                                         onCanvasRendered={this.onCanvasRendered}
                                         onSelectedSegmentChanged={this.onSelectedSegmentChanged}
+                                        onSaveSvg={this.storeStateToSvgFile}
                                         selectionMode={
                                             this.state.selectionMode
                                         }
@@ -343,6 +344,13 @@ export default class EditorSegmentPage extends React.Component<
                 },
                 () => this.canvas.current.applyTag(tag)
             );
+        }
+    }
+
+    private storeStateToSvgFile = async (fileName: string, content: string): Promise<void> => {
+        if (this.state.selectedAsset && this.state.selectedAsset.svg) {
+            await this.props.actions.saveSvg(
+                this.props.project, fileName, content);
         }
     }
 

@@ -134,7 +134,8 @@ export const exportToPng = (canvasId: string, fileName: string, backgroundColor:
     }
 }
 
-export const exportToSvg = (canvasId: string, fileName: string, callback?: (fileName: string, content: string) => any) => {
+export const exportToSvg = (canvasId: string, fileName: string,
+    callback?: (fileName: string, content: string) => any) => {
     let fileNameSplit = fileName.split("/");
     let finalFileName = fileNameSplit[fileNameSplit.length - 1].split(".")[0] + ".svg";
 
@@ -146,7 +147,11 @@ export const exportToSvg = (canvasId: string, fileName: string, callback?: (file
     }
 }
 
-export const getSvgUrl = (canvasId:string, empty: boolean = false): string => {
+export const getSvgContent = (canvasId: string) => {
+    return prepare2Export(canvasId).outerHTML!;
+}
+
+export const getSvgUrl = (canvasId: string, empty: boolean = false): string => {
     const content = prepare2Export(canvasId, empty).outerHTML!;
     var file = new Blob([content], { type: 'image/svg+xml' });
     return URL.createObjectURL(file);

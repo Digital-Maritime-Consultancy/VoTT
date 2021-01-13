@@ -14,7 +14,7 @@ import { createContentBoundingBox } from "../../../../../common/layout";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { ExtendedSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, getSegmentsFromSvg, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
+import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, getSegmentsFromSvg, getSvgContent, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
@@ -27,10 +27,11 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedSegmentChanged?: (segment: ISegment) => void;
+    onSaveSvg?: (fileName: string, content: string) => void;
     onCanvasRendered?: (canvas: HTMLCanvasElement) => void;
 }
 
-const superpixelEditorId = "mainCanvas";
+const canvasId = "mainCanvas";
 
 export interface ISegmentCanvasState {
     currentAsset: IAssetMetadata;
@@ -157,12 +158,12 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public getAnnotating = (): ITag => {
-        const svg = document.getElementById(superpixelEditorId);
+        const svg = document.getElementById(canvasId);
         return svg ? { name: svg.getAttribute("color-profile"),  color: svg.getAttribute("name") } : undefined;
     }
 
     public updateAnnotating(tag: string, color: string){
-        const svg = document.getElementById(superpixelEditorId);
+        const svg = document.getElementById(canvasId);
         if(svg){
             svg.setAttribute("color-profile", tag);
             svg.setAttribute("name", color);
@@ -207,7 +208,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-                        <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
+                        <SuperpixelCanvas id={canvasId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
                         canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
                         isActivated={() => this.props.selectionMode !== ExtendedSelectionMode.NONE }
@@ -294,7 +295,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     private removeAllSegments = (removeState: boolean = true) => {
-        clearCanvas(superpixelEditorId, this.defaultColor);
+        clearCanvas(canvasId, this.defaultColor);
         if (removeState) {
             this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
         }
@@ -307,8 +308,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.onSegmentsUpdated(filteredSegments);
     }
 
-    private updateFromSvg = () => {
-        const segments = getSegmentsFromSvg(superpixelEditorId);
+    private updateStateFromSvg = () => {
+        const segments = getSegmentsFromSvg(canvasId);
         if (segments.length > 0 || this.state.currentAsset.segments.length > 0){
             const integratedSegments = segments.map( (e) => {
                 const getElementWithSameTag = (s) => {
@@ -330,7 +331,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
         if (applyNow) {
-            this.updateFromSvg();
+            //this.updateStateFromSvg();
+            this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
         }
         else{
             offsets.forEach((item: ISegmentOffset) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
