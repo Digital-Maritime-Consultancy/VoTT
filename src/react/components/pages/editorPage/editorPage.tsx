@@ -73,6 +73,8 @@ export interface IEditorPageState {
     segmentationAssets?: IAsset[];
     /** Currently selected segment on current asset */
     selectedSegment?: ISegment;
+    /** grid visibility */
+    gridOn?: boolean;
 }
 
 export function mapStateToProps(state: IApplicationState) {

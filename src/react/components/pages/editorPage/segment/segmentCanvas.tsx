@@ -126,6 +126,10 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
     }
 
+    public setGridOn = (value: boolean) => {
+        this.setState({gridOn: value});
+    }
+
     public invalidateSelection() {
         this.lastSelectedTag = AnnotationTag.EMPTY;
     }

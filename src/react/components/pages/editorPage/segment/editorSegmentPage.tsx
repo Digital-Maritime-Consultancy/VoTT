@@ -87,6 +87,7 @@ export default class EditorSegmentPage extends React.Component<
         isValid: true,
         showInvalidRegionWarning: false,
         context: EditorContext.Segment,
+        gridOn: false,
     };
 
     private activeLearningService: ActiveLearningService = null;
@@ -661,6 +662,7 @@ export default class EditorSegmentPage extends React.Component<
                 this.setState({
                     selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.canvas.current.setGridOn(!this.canvas.current.state.gridOn);
                 this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.PreviousAsset:
@@ -671,9 +673,6 @@ export default class EditorSegmentPage extends React.Component<
                 break;
             case ToolbarItemName.RemoveAllSegments:
                 this.canvas.current.confirmRemoveAllSegments();
-                break;
-            case ToolbarItemName.ActiveLearning:
-                await this.predictSegments();
                 break;
         }
     }

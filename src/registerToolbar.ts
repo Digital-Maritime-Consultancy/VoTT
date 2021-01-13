@@ -160,12 +160,22 @@ export default function registerToolbar() {
 
     ToolbarItemFactory.register({
         name: ToolbarItemName.ActiveLearning,
-        context: [EditorContext.Geometry, EditorContext.Segment],
+        context: [EditorContext.Geometry],
         tooltip: strings.editorPage.toolbar.activeLearning,
         icon: "fas fa-graduation-cap",
         group: ToolbarItemGroup.Canvas,
         type: ToolbarItemType.Action,
         accelerators: ["CmdOrCtrl+D", "CmdOrCtrl+d"],
+    });
+
+    ToolbarItemFactory.register({
+        name: ToolbarItemName.ShowSegBoundary,
+        context: [EditorContext.Segment],
+        tooltip: strings.editorPage.toolbar.showSegBoundary,
+        icon: "fa-archive",
+        group: ToolbarItemGroup.Canvas,
+        type: ToolbarItemType.Action,
+        accelerators: ["G", "g"],
     });
 
     ToolbarItemFactory.register({

@@ -252,6 +252,7 @@ export const japanese: IAppStrings = {
             activeLearning: "アクティブ ラーニング",  // Active Learning"
             annotateSegments: "Annotate Segments",
             removeAnnotation: "Remove Annotation",
+            showSegBoundary: "Show Segment Boundary",
         },
         videoPlayer: {
             previousTaggedFrame: {
