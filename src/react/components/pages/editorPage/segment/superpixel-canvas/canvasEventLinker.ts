@@ -4,12 +4,12 @@ const Snap = require("snapsvg-cjs");
 
 export const updateSVGEvent = (canvasContainerId: string, canvasId: string, defaultColor: string,
     defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, annotatingOpacity: number, highlightLineWidth: number,
-    onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void) => {
+    isActivated: () => boolean, onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void) => {
     const s = Snap("#" + canvasContainerId);
     const elements = s.selectAll("path");
     elements.forEach((superpixel: any) => {
         return configureSuperpixelEvent(canvasId, superpixel, defaultColor, defaultOpacity,
-            annotatedOpacity, defaultLineWidth, annotatingOpacity, highlightLineWidth, onSegmentsUpdated, onSelectedTagUpdated);
+            annotatedOpacity, defaultLineWidth, annotatingOpacity, highlightLineWidth, isActivated, onSegmentsUpdated, onSelectedTagUpdated);
     });
 }
 
@@ -60,10 +60,10 @@ export const paintSuperpixel =
 
 const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColor: string,
     defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, annotatingOpacity: number, highlightLineWidth: number,
-    onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void
+    isActivated: () => boolean, onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void
     ) => {
         superpixel.mouseover( (event: MouseEvent) => {
-            if (event.buttons > 0) { return ; }
+            if (event.buttons > 0 || !isActivated()) { return ; }
             const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
             const currentColor = superpixel.attr().name;
             const fillColor = document.getElementById(canvasId).getAttribute("name")!;
@@ -76,7 +76,7 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 }
             })
             .mouseout( (event: MouseEvent) => {
-                if (event.buttons > 0) { return ; }
+                if (event.buttons > 0 || !isActivated()) { return ; }
                 const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
                 const currentColor = superpixel.attr().name;
                 if(annotatingTag !== AnnotationTag.EMPTY){
@@ -88,11 +88,13 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 }
             })
             .mousemove( (event: MouseEvent) => {
+                if (!isActivated()) { return ; }
                 const annotatingTag = superpixel.parent().attr()["color-profile"];
                 const fillColor: string = superpixel.parent().attr()["name"];
                 paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
             })
             .mousedown( (event: MouseEvent) => {
+                if (!isActivated()) { return ; }
                 const annotatingTag = superpixel.parent().attr()["color-profile"];
                 const fillColor: string = superpixel.parent().attr()["name"];
                 paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
@@ -101,6 +103,7 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 clicked = true;
             })
             .mouseup( (event: MouseEvent) => {
+                if (!isActivated()) { return ; }
                 if (clicked){
                     const tag: string = superpixel.attr()["tag"];
                     onSelectedTagUpdated(tag);

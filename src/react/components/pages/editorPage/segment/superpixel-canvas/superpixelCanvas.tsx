@@ -156,12 +156,12 @@ interface SuperpixelCanvasProps {
     id: string, canvasWidth: number, canvasHeight: number, segmentationData: any,
      annotatedData: Annotation[], defaultColor: string, gridOn: boolean, svgName: string,
      onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void,
-     onCanvasLoaded: (...params: any[]) => void;
+     isActivated: () => boolean;
 }
 
 export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> = 
 ({id, canvasWidth, canvasHeight, segmentationData, annotatedData, defaultColor, gridOn, svgName,
-     onSegmentsUpdated, onSelectedTagUpdated, onCanvasLoaded}) => {
+     onSegmentsUpdated, onSelectedTagUpdated, isActivated}) => {
     const [ loaded, setLoaded ] = useState(false);
     const [ loadedSvgName, setLoadedSvgName ] = useState("");
     const [ gridReady, setGridReady ] = useState( false);
@@ -174,7 +174,6 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 if (s && s.select("path") === null){
                     s.append( data );
                     setLoaded(true);
-                    console.log("??");
                 }
             }
             else{
@@ -199,7 +198,6 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
             setLoadedSvgName(fileName);
         };
         
-        console.log(loaded);
         if (!loaded && !svgNotExist){
             loadSVG(svgName);
         }
@@ -210,22 +208,16 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
         }
         else if (loaded) {
             if (loadedSvgName.length && loadedSvgName !== svgName){
-                console.log("Needs to be updated! " + svgName);
                 removeSvgElements();
                 setLoaded(false);
             } else {
-                console.log(loadedSvgName);
                 if (gridReady) {
                     let s = Snap("#" + id);
-                    console.log(s);
                     if (s && s.selectAll("path").length){
                         clearCanvas(id, defaultColor);
-                        console.log(annotatedData);
                         annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
                         updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
-                            annotatingOpacity, highlightLineWidth, onSegmentsUpdated, onSelectedTagUpdated,);
-                        onCanvasLoaded();
-                        console.log("event loaded");
+                            annotatingOpacity, highlightLineWidth, isActivated, onSegmentsUpdated, onSelectedTagUpdated,);
                     }
                 }
             }

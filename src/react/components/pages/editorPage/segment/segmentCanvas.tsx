@@ -210,7 +210,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
                         canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                        onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
+                        isActivated={() => this.props.selectionMode !== ExtendedSelectionMode.NONE }
+                        onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} />
                     </div>
                 </div>
                 {this.renderChildren()}
