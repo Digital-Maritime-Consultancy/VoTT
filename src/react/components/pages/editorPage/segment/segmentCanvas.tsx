@@ -68,7 +68,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
-    
     private updateQueue: ISegmentOffset[] = [];
     private lastSelectedTag: string = AnnotationTag.EMPTY;
 
@@ -211,7 +210,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         <SuperpixelCanvas id={canvasId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
                         canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                        isActivated={() => this.props.selectionMode !== ExtendedSelectionMode.NONE }
+                        getCurrentMode={() => this.props.selectionMode }
                         onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} />
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import { clear } from "console";
 import { ISegment } from "../../../../../../models/applicationState";
+import { ExtendedSelectionMode } from "../../editorPage";
 import { annotateCanvas } from "./canvasAnnotator";
 import { updateSVGEvent } from "./canvasEventLinker";
 import { CanvasGridProvider } from "./canvasGridProvider";
@@ -161,12 +162,12 @@ interface SuperpixelCanvasProps {
     id: string, canvasWidth: number, canvasHeight: number, segmentationData: any,
      annotatedData: Annotation[], defaultColor: string, gridOn: boolean, svgName: string,
      onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void,
-     isActivated: () => boolean;
+     getCurrentMode: () => ExtendedSelectionMode;
 }
 
 export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> = 
 ({id, canvasWidth, canvasHeight, segmentationData, annotatedData, defaultColor, gridOn, svgName,
-     onSegmentsUpdated, onSelectedTagUpdated, isActivated}) => {
+     onSegmentsUpdated, onSelectedTagUpdated, getCurrentMode}) => {
     const [ loaded, setLoaded ] = useState(false);
     const [ loadedSvgName, setLoadedSvgName ] = useState("");
     const [ gridReady, setGridReady ] = useState( false);
@@ -222,7 +223,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                         clearCanvas(id, defaultColor);
                         annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
                         updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
-                            annotatingOpacity, highlightLineWidth, isActivated, onSegmentsUpdated, onSelectedTagUpdated,);
+                            annotatingOpacity, highlightLineWidth, getCurrentMode, onSegmentsUpdated, onSelectedTagUpdated,);
                     }
                 }
             }
