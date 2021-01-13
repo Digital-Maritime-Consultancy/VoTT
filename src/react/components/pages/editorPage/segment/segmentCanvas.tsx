@@ -334,7 +334,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
         if (applyNow) {
-            //this.updateStateFromSvg();
+            this.updateStateFromSvg();
             this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
         }
         else{
