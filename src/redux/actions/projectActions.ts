@@ -29,6 +29,8 @@ export default interface IProjectActions {
     closeProject(): void;
     exportProject(project: IProject): Promise<void> | Promise<IExportResults>;
     loadAssets(project: IProject): Promise<IAsset[]>;
+    loadSvg(project: IProject): Promise<IAsset[]>;
+    saveSvg(project: IProject, fileName: string, content: string): Promise<IAsset[]>;
     loadSegmentationData(project: IProject): Promise<IAsset[]>;
     loadImageMetadata(project: IProject, filePath: string): Promise<object>;
     saveImageMetadata(project: IProject, filePath: string, content: object): Promise<void>;

@@ -1,3 +1,4 @@
+import { clear } from "console";
 import { ISegment } from "../../../../../../models/applicationState";
 import { annotateCanvas } from "./canvasAnnotator";
 import { updateSVGEvent } from "./canvasEventLinker";
@@ -162,32 +163,43 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
 ({id, canvasWidth, canvasHeight, segmentationData, annotatedData, defaultColor, gridOn, svgName,
      onSegmentsUpdated, onSelectedTagUpdated, onCanvasLoaded}) => {
     const [ loaded, setLoaded ] = useState(false);
+    const [ loadedSvgName, setLoadedSvgName ] = useState("");
     const [ gridReady, setGridReady ] = useState( false);
     const [ svgNotExist, setSvgNotExist ] = useState(false);
     const [ createdSvg, setCreatedSvg ] = useState(undefined);
 
     const onSVGLoaded = (data: any, test:any) => { 
-        const s = Snap("#" + canvasContainerId);
-        if (data.node.nodeName === 'svg'){  // load success
-            if (s.select("path") === null){
-                s.append( data );
-                setLoaded(true);
+            const s = Snap("#" + canvasContainerId);
+            if (data.node.nodeName === 'svg'){  // load success
+                if (s && s.select("path") === null){
+                    s.append( data );
+                    setLoaded(true);
+                    console.log("??");
+                }
             }
-        }
-        else{
-            setSvgNotExist(true);
-        }
+            else{
+                setSvgNotExist(true);
+            }
     }
 
     const onCanvasSVGCreated = () => {
         setLoaded(true);
     }
 
+    const removeSvgElements = () => {
+        const s = Snap("#" + id);
+        if (s) {
+            s.remove();
+        }
+    }
+
     useEffect( () => {
         async function loadSVG(fileName: string) {
             await Snap.load(fileName, onSVGLoaded);
+            setLoadedSvgName(fileName);
         };
         
+        console.log(loaded);
         if (!loaded && !svgNotExist){
             loadSVG(svgName);
         }
@@ -196,16 +208,29 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 <CanvasSVGCreator id={id} canvasWidth={canvasWidth} canvasHeight={canvasHeight} segmentationData={segmentationData} 
                 defaultColor={defaultColor} defaultOpacity={defaultOpacity} defaultLineWidth={defaultLineWidth} onCanvasSVGCreated={onCanvasSVGCreated} />);
         }
-        else if (loaded && gridReady){
-            var s = Snap("#" + id);
-            if (s && s.selectAll("path").length){
-                annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
-                updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
-                    annotatingOpacity, highlightLineWidth, onSegmentsUpdated, onSelectedTagUpdated,);
-                onCanvasLoaded();
+        else if (loaded) {
+            if (loadedSvgName.length && loadedSvgName !== svgName){
+                console.log("Needs to be updated! " + svgName);
+                removeSvgElements();
+                setLoaded(false);
+            } else {
+                console.log(loadedSvgName);
+                if (gridReady) {
+                    let s = Snap("#" + id);
+                    console.log(s);
+                    if (s && s.selectAll("path").length){
+                        clearCanvas(id, defaultColor);
+                        console.log(annotatedData);
+                        annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
+                        updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
+                            annotatingOpacity, highlightLineWidth, onSegmentsUpdated, onSelectedTagUpdated,);
+                        onCanvasLoaded();
+                        console.log("event loaded");
+                    }
+                }
             }
-        }
-    }, [loaded, svgNotExist, gridReady, segmentationData, annotatedData]);
+        } 
+    }, [loaded, svgNotExist, gridReady, annotatedData]);
 
     return (
         <div id={canvasContainerId} className={"full-size img-overlay-wrap"}>

@@ -292,7 +292,7 @@ export interface IAssetMetadata {
     segments: ISegment[];
     version: string;
     segmentationData?: IAsset;
-    svg: IAsset;
+    svg?: IAsset;
 }
 
 /**

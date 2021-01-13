@@ -250,6 +250,27 @@ export default class MockFactory {
     }
 
     /**
+     * @name Create Svg asset
+     * @description Creates fake svg IAsset
+     * @param name Name of asset
+     * @param assetState State of asset
+     */
+    public static createSVGTestAsset(name: string, assetState: AssetState = AssetState.NotVisited): IAsset {
+        return {
+            id: `svg-${name}`,
+            format: "svg",
+            name: `svg-${name}.svg`,
+            path: encodeFileURI(`C:\\Desktop\\${name}.svg`),
+            state: { [EditorContext.Segment]: assetState },
+            type: AssetType.SvgImage,
+            size: {
+                width: 800,
+                height: 600,
+            },
+        };
+    }
+
+    /**
      * @name Create Image Metadata Asset
      * @description Creates fake image metadata IAsset
      * @param name Name of asset
@@ -939,6 +960,8 @@ export default class MockFactory {
             loadSegmentationData: jest.fn(() => Promise.resolve()),
             loadImageMetadata: jest.fn(() => Promise.resolve()),
             saveImageMetadata: jest.fn(() => Promise.resolve()),
+            loadSvg: jest.fn(() => Promise.resolve()),
+            saveSvg: jest.fn(() => Promise.resolve()),
             exportProject: jest.fn(() => Promise.resolve()),
             loadAssetMetadata: jest.fn(() => Promise.resolve()),
             saveAssetMetadata: jest.fn(() => Promise.resolve()),

@@ -227,6 +227,7 @@ export default class EditorSegmentPage extends React.Component<
                                         selectionMode={
                                             this.state.selectionMode
                                         }
+                                        svgFileName={this.state.selectedAsset.svg ? this.state.selectedAsset.svg.path : undefined}
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}
                                         canvasWidth={1024}
@@ -764,7 +765,8 @@ export default class EditorSegmentPage extends React.Component<
         // update asset
         try {
             if (this.state.segmentationAssets){
-                assetMetadata.segmentationData = this.loadSegmentationData(asset, this.state.segmentationAssets);
+                assetMetadata.svg = this.getSvgAsset(asset, this.state.segmentationAssets);
+                //assetMetadata.segmentationData = this.loadSegmentationData(asset, this.state.segmentationAssets);
             }
         } catch (err) {
             console.warn("Error in loading segmentation data file");
@@ -830,8 +832,14 @@ export default class EditorSegmentPage extends React.Component<
             (asset) => !asset.parent,
         );
 
+        /* to be deleted
         // Get all root assets from source asset provider
         const sourceSegAssets = await this.props.actions.loadSegmentationData(
+            this.props.project,
+        );
+        */
+
+        const sourceSegAssets = await this.props.actions.loadSvg(
             this.props.project,
         );
 
@@ -860,6 +868,13 @@ export default class EditorSegmentPage extends React.Component<
 
     private loadSegmentationData(asset: IAsset, metadataAssets: IAsset[]): IAsset{
         const segmentationDataAsset = metadataAssets.filter((e) => e.name.includes(asset.name));
+        if (segmentationDataAsset && segmentationDataAsset.length) {
+            return segmentationDataAsset[0];
+        }
+    }
+
+    private getSvgAsset(asset: IAsset, segmentationAssets: IAsset[]): IAsset {
+        const segmentationDataAsset = segmentationAssets.filter((e) => e.name.includes(asset.name));
         if (segmentationDataAsset && segmentationDataAsset.length) {
             return segmentationDataAsset[0];
         }

@@ -30,7 +30,7 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     onCanvasRendered?: (canvas: HTMLCanvasElement) => void;
 }
 
-const superpixelEditorId = "superpixel-editor-main-canvas";
+const superpixelEditorId = "mainCanvas";
 
 export interface ISegmentCanvasState {
     currentAsset: IAssetMetadata;
@@ -81,20 +81,20 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public componentDidUpdate = async (prevProps: Readonly<ISegmentCanvasProps>, prevState: Readonly<ISegmentCanvasState>) => {
-        // Handles asset changing
-        if(this.props.project && this.props.selectedAsset.segmentationData && this.state.segmentationData === null){
-            const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
+        if (this.props.project && !this.state.annotatedData) {
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
-                segmentationData, });
+            });
             this.invalidateSelection();
         }
+        // Handles asset changing
         else if (this.props.project && this.props.selectedAsset !== prevProps.selectedAsset) {
-            this.setState({segmentationData: null});
-            const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
+            //this.setState({segmentationData: null});
+            //const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
-                segmentationData, });
+            });
+            //    segmentationData, });
             this.invalidateSelection();
         }
 
@@ -207,12 +207,10 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-                        { this.state.segmentationData && this.props.project ?
-                            <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
-                            annotatedData={this.decomposeSegment(this.state.currentAsset.segments, this.props.project.tags)} 
-                            canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                            onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
-                        : <div> segmentation is loading... </div>}
+                        <SuperpixelCanvas id={superpixelEditorId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
+                        annotatedData={this.state.annotatedData} 
+                        canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
+                        onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} onCanvasLoaded={() => {}} />
                     </div>
                 </div>
                 {this.renderChildren()}

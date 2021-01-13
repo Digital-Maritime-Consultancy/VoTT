@@ -92,6 +92,8 @@ export class AssetService {
                 return AssetType.SegmentationData;
             case "json":
                 return AssetType.ImageMetadata;
+            case "svg":
+                return AssetType.SvgImage;
             default:
                 return AssetType.Unknown;
         }
@@ -172,14 +174,16 @@ export class AssetService {
      * Get segmentation data from provider
      */
     public async getSegmentationData(): Promise<IAsset[]> {
-        return await this.segmentationDataProvider.getAssets();
+        const assets = await this.segmentationDataProvider.getAssets();
+        return assets.filter((e) => e.format === 'seg');
     }
 
     /**
      * Get segmentation data from provider
      */
     public async getSvg(): Promise<IAsset[]> {
-        return await this.svgProvider.getAssets();
+        const assets = await this.svgProvider.getAssets();
+        return assets.filter((e) => e.format === 'svg');
     }
 
     /**
