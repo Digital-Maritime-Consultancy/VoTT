@@ -197,6 +197,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
     }
 
     const initializeCanvas = () => {
+        clearAnnotating(id, defaultColor);
         const s = Snap("#"+id);
         const paths = s.selectAll('path');
         paths.forEach(function(element: Snap.Set){
@@ -262,12 +263,19 @@ export const getBoundingBox = (canvasId: string, ids: number[]) => {
     return { left: bbox.x, top: bbox.y, width: bbox.width, height: bbox.height };
 }
 
-export const clearCanvas = (canvasId: string, defaultcolor: string) => {
+export const clearCanvas = (canvasId: string, defaultColor: string) => {
+    clearAnnotating(canvasId, defaultColor);
     const s = Snap("#"+canvasId);
     const paths = s.selectAll('path');
     paths.forEach(function(element: Snap.Set){
         const e = element.attr;
-        element.attr({...e, name: AnnotationTag.EMPTY, tag: AnnotationTag.EMPTY, fill: defaultcolor,
+        element.attr({...e, name: AnnotationTag.EMPTY, tag: AnnotationTag.EMPTY, fill: defaultColor,
             style: `stroke-width: ${defaultLineWidth}; opacity: ${defaultOpacity};`,});
     }, this);
+}
+
+const clearAnnotating = (canvasId: string, defaultColor: string) => {
+    const dom = document.getElementById(canvasId);
+    dom.setAttribute("color-profile", AnnotationTag.EMPTY);
+    dom.setAttribute("name", defaultColor);
 }
