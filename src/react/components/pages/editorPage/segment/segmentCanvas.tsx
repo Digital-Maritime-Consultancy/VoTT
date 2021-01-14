@@ -68,7 +68,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private canvasZone: React.RefObject<HTMLDivElement> = React.createRef();
     private clearConfirm: React.RefObject<Confirm> = React.createRef();
-    private updateQueue: ISegmentOffset[] = [];
     private lastSelectedTag: string = AnnotationTag.EMPTY;
 
     public componentDidMount = () => {
@@ -214,8 +213,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                         <SuperpixelCanvas id={canvasId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
                         canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                        getCurrentMode={() => this.props.selectionMode }
-                        onSegmentsUpdated={this.onSegmentOffsetsUpdated} onSelectedTagUpdated={this.onSelectedTagUpdated} />
+                        getCurrentMode={() => this.props.selectionMode} onCanvasUpdated={this.onCanvasUpdated} />
                     </div>
                 </div>
                 {this.renderChildren()}
@@ -256,7 +254,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
        //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
     }
 
-    private onSelectedTagUpdated = async (
+    private onCanvasUpdated = async (
         tag: string,
     ): Promise<void> => {
         if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) {
@@ -265,6 +263,10 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 this.props.onSelectedSegmentChanged(selectedSegment);
             }
             this.lastSelectedTag = tag;
+        }
+        else if (tag) {
+            this.updateStateFromSvg();
+            this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
         }
     }
 
@@ -329,16 +331,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 return e;
             });
             this.onSegmentsUpdated(integratedSegments);
-        }
-    }
-
-    private onSegmentOffsetsUpdated = (offsets: ISegmentOffset[], applyNow: boolean = false) => {
-        if (applyNow) {
-            this.updateStateFromSvg();
-            this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
-        }
-        else{
-            offsets.forEach((item: ISegmentOffset) => this.updateQueue.findIndex(x => x.superpixelId===item.superpixelId) < 0 ? this.updateQueue.push(item) : undefined );
         }
     }
 
