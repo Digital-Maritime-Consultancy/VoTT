@@ -12,6 +12,7 @@ describe("Tag Input Item", () => {
             isBeingEdited: false,
             isLocked: false,
             isSelected: false,
+            isClickable: false,
             appliedToSelectedRegions: false,
             onClick: jest.fn(),
             onChange: jest.fn(),
