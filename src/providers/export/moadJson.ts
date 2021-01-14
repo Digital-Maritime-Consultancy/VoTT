@@ -17,6 +17,10 @@ export interface IMoadJsonExportProviderOptions extends IExportProviderOptions {
     includeSegmentAnnotatedImages: boolean;
 }
 
+const geometryFolderName = "moad-json-export/geometry/";
+const segmentFolderName = "moad-json-export/segmentation/";
+const segmentPngFolderName = "moad-json-export/segmentation/png/";
+
 /**
  * @name - MOAD Json Export Provider
  * @description - Exports a project into a single JSON file that include all configured assets
@@ -47,8 +51,6 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         delete exportObject.metadataConnection;
         delete exportObject.targetConnection;
         delete exportObject.exportFormat;
-
-        const pngFolderName = "moad-json-export/segmentation/png/";
         
         if (this.options.exportIndividuals){
             const assets = exportObject.assets;
@@ -62,22 +64,21 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
 
             assetMetadata.forEach(async (item) => {
                 if( item.regions && item.regions.length) {
-                    //const fileName = `moad-json-export/geometry/${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
-                    //await this.storageProvider.writeText(fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
+                    const fileName = `${geometryFolderName}${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
+                    await this.storageProvider.writeText(fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
                 }
                 if( item.segments && item.segments.length) {
-                    //const fileName = `moad-json-export/segmentation/${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
-                    //await this.storageProvider.writeText(fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
+                    const fileName = `${segmentFolderName}${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
+                    await this.storageProvider.writeText(fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
                 }
-                console.log(item);
                 if (this.options.includeSegmentAnnotatedImages && item.svg) {
                     const svgFileName = item.svg.name;
 
                     const onSVGLoaded = (data) => {
                         svgToPng.svgAsPngUri(data.node, "", {backgroundColor: "#000000"})
                             .then((uri: string) => 
-                                this.metadataExportProvider.writeBinary(
-                                    pngFolderName + svgFileName.replace(".svg", "") + ".png",
+                                this.storageProvider.writeBinary(
+                                    segmentPngFolderName + svgFileName.replace(".svg", "") + ".png",
                                     Buffer.from(uri.replace("data:image/png;base64,",""),'base64')));
                     }
 
