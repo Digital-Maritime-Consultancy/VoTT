@@ -159,13 +159,13 @@ export const getSvgUrl = (canvasId: string, empty: boolean = false): string => {
 }
 
 interface SuperpixelCanvasProps {
-    id: string, canvasWidth: number, canvasHeight: number, segmentationData: any,
+    id: string, canvasWidth: number, canvasHeight: number, 
      annotatedData: Annotation[], defaultColor: string, gridOn: boolean, svgName: string,
      getCurrentMode: () => ExtendedSelectionMode, onCanvasUpdated: (...params: any[]) => void,
 }
 
 export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> = 
-({id, canvasWidth, canvasHeight, segmentationData, annotatedData, defaultColor, gridOn, svgName, getCurrentMode, onCanvasUpdated}) => {
+({id, canvasWidth, canvasHeight, annotatedData, defaultColor, gridOn, svgName, getCurrentMode, onCanvasUpdated}) => {
     const [ loaded, setLoaded ] = useState(false);
     const [ loadedSvgName, setLoadedSvgName ] = useState("");
     const [ gridReady, setGridReady ] = useState( false);
@@ -206,9 +206,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
             loadSVG(svgName);
         }
         else if (!loaded && svgNotExist){
-            setCreatedSvg(
-                <CanvasSVGCreator id={id} canvasWidth={canvasWidth} canvasHeight={canvasHeight} segmentationData={segmentationData} 
-                defaultColor={defaultColor} defaultOpacity={defaultOpacity} defaultLineWidth={defaultLineWidth} onCanvasSVGCreated={onCanvasSVGCreated} />);
+            console.log("svg does not exist!");
         }
         else if (loaded) {
             if (loadedSvgName.length && loadedSvgName !== svgName){

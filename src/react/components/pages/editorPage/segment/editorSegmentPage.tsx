@@ -619,7 +619,6 @@ export default class EditorSegmentPage extends React.Component<
             if (index >= 0 && tag.color !== tags[index].color){
                 if (this.canvas && this.canvas.current.getAnnotating() && this.canvas.current.getAnnotating().name === tag.name){
                     this.canvas.current.updateAnnotating(tags[index].name, tags[index].color);
-                    this.canvas.current.refreshCanvas();
                 }
             }
         });
@@ -772,6 +771,7 @@ export default class EditorSegmentPage extends React.Component<
         // update asset
         try {
             if (this.state.segmentationAssets){
+                console.log(assetMetadata);
                 assetMetadata.svg = this.getSvgAsset(asset, this.state.segmentationAssets);
                 //assetMetadata.segmentationData = this.loadSegmentationData(asset, this.state.segmentationAssets);
             }
@@ -855,7 +855,7 @@ export default class EditorSegmentPage extends React.Component<
             .concat(sourceSegAssets)
             .uniqBy((asset) => asset.id)
             .value();
-        
+
         this.setState(
             {
                 assets: rootAssets,

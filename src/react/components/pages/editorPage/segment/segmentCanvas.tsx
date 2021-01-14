@@ -38,7 +38,6 @@ export interface ISegmentCanvasState {
     contentSource: ContentSource;
     enabled: boolean;
     annotatedData: Annotation[];
-    segmentationData: any; // json object
     gridOn: boolean;
 }
 
@@ -58,7 +57,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         contentSource: null,
         enabled: true,
         annotatedData: null,
-        segmentationData: null,
         gridOn: false,
     };
 
@@ -88,12 +86,9 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
         // Handles asset changing
         else if (this.props.project && this.props.selectedAsset !== prevProps.selectedAsset) {
-            //this.setState({segmentationData: null});
-            //const segmentationData = await this.loadSegmentationData(this.props.selectedAsset.segmentationData.path);
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
             });
-            //    segmentationData, });
             this.invalidateSelection();
         }
 
@@ -210,7 +205,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-                        <SuperpixelCanvas id={canvasId} segmentationData={this.state.segmentationData} svgName={this.props.svgFileName} 
+                        <SuperpixelCanvas id={canvasId} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
                         canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
                         getCurrentMode={() => this.props.selectionMode} onCanvasUpdated={this.onCanvasUpdated} />
@@ -242,18 +237,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.onWindowResize();
     }
 
-    public refreshCanvas = () => {
-        this.clearSegmentationData();
-        /*
-        // the function currently not used
-        if (!this.state.currentAsset.segments || this.state.currentAsset.segments.length === 0) {
-            return;
-        }
-        //this.removeAllSegments(false);
-        */
-       //this.setState({... this.state, annotatedData: this.decomposeSegment(this.state.currentAsset.segments), });
-    }
-
     private onCanvasUpdated = async (
         tag: string,
     ): Promise<void> => {
@@ -268,22 +251,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             this.updateStateFromSvg();
             this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
         }
-    }
-
-    private clearSegmentationData(){
-        this.setState( {... this.state, segmentationData: null});
-    }
-
-    private async loadSegmentationData(path: string){
-        const response = await fetch(path
-                ,{
-                        headers : { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    }
-                )
-        return await response.json();
     }
 
     private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
