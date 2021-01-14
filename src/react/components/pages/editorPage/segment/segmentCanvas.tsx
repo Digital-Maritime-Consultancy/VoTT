@@ -15,6 +15,7 @@ import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { ExtendedSelectionMode } from "../editorPage";
 import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, getSegmentsFromSvg, getSvgContent, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
+import { saveSvg } from "../../../../../redux/actions/projectActions";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     selectedAsset: IAssetMetadata;
@@ -233,54 +234,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         });
     }
 
-    public forceResize = (): void => {
-        this.onWindowResize();
-    }
-
-    private onCanvasUpdated = async (
-        tag: string,
-    ): Promise<void> => {
-        if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) {
-            const selectedSegment = this.getSelectedSegment(tag);
-            if (this.props.onSelectedSegmentChanged && this.lastSelectedTag !== tag) {
-                this.props.onSelectedSegmentChanged(selectedSegment);
-            }
-            this.lastSelectedTag = tag;
-        }
-        else if (tag) {
-            this.updateStateFromSvg();
-            this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
-        }
-    }
-
-    private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
-        const annotation = [];
-        for (const s of segments){
-            for (const superpixel of s.superpixel){
-                const tag = tags.filter((tag) => tag.name === s.tag);
-                if(tag.length > 0){
-                    annotation.push(new Annotation(s.tag, tag[0].color, superpixel));
-                }
-            }
-        }
-        return annotation;
-    }
-
-    private removeAllSegments = (removeState: boolean = true) => {
-        clearCanvas(canvasId, this.defaultColor);
-        if (removeState) {
-            this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
-        }
-    }
-
-    private deleteSegmentsFromAsset = (segments: ISegment[]) => {
-        const filteredSegments = this.state.currentAsset.segments.filter((assetSegment) => {
-            return !segments.find((s) => s.id === assetSegment.id);
-        });
-        this.onSegmentsUpdated(filteredSegments);
-    }
-
-    private updateStateFromSvg = () => {
+    public updateStateFromSvg = () => {
         const segments = getSegmentsFromSvg(canvasId);
         if (segments.length > 0 || this.state.currentAsset.segments.length > 0){
             const integratedSegments = segments.map( (e) => {
@@ -299,6 +253,67 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             });
             this.onSegmentsUpdated(integratedSegments);
         }
+    }
+
+    public forceResize = (): void => {
+        this.onWindowResize();
+    }
+
+    private getDummySegment = (tag: string): ISegment => {
+        return { id: shortid.generate().toString(), tag, superpixel: [], area: 0, boundingBox: undefined, iscrowd: 0, risk: "safe" };
+    }
+
+    private onCanvasUpdated = async (
+        tag: string,
+    ): Promise<void> => {
+        if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) {
+            const selectedSegment = this.getSelectedSegment(tag);
+            if (this.props.onSelectedSegmentChanged && this.lastSelectedTag !== tag) {
+                this.props.onSelectedSegmentChanged(selectedSegment);
+            }
+            this.lastSelectedTag = tag;
+        }
+        else if (tag) {
+            const selectedSegment = this.getSelectedSegment(tag);
+            if (!selectedSegment && tag !== AnnotationTag.EMPTY) {
+                const segments = [ ...this.state.currentAsset.segments, this.getDummySegment(tag) ];
+                this.onSegmentsUpdated(segments);
+            }
+            //this.updateStateFromSvg();
+            this.storeSvgFile();
+        }
+    }
+
+    private storeSvgFile = () => {
+        this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
+    }
+
+    private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
+        const annotation = [];
+        for (const s of segments){
+            for (const superpixel of s.superpixel){
+                const tag = tags.filter((tag) => tag.name === s.tag);
+                if(tag.length > 0){
+                    annotation.push(new Annotation(s.tag, tag[0].color, superpixel));
+                }
+            }
+        }
+        return annotation;
+    }
+
+    private removeAllSegments = (removeState: boolean = true) => {
+        clearCanvas(canvasId, this.defaultColor);
+        this.storeSvgFile();
+        if (removeState) {
+            this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
+        }
+    }
+
+    private deleteSegmentsFromAsset = (segments: ISegment[]) => {
+        const filteredSegments = this.state.currentAsset.segments.filter((assetSegment) => {
+            return !segments.find((s) => s.id === assetSegment.id);
+        });
+        this.onSegmentsUpdated(filteredSegments);
     }
 
     private renderChildren = () => {

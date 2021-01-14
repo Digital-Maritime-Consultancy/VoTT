@@ -676,46 +676,6 @@ export default class EditorSegmentPage extends React.Component<
         }
     }
 
-    private predictSegments = async (canvas?: HTMLCanvasElement) => {
-        canvas = canvas || document.querySelector("canvas");
-        if (!canvas) {
-            return;
-        }
-
-        // Load the configured ML model
-        if (!this.activeLearningService.isModelLoaded()) {
-            let toastId: number = null;
-            try {
-                toastId = toast.info(
-                    strings.activeLearning.messages.loadingModel,
-                    { autoClose: false }
-                );
-                await this.activeLearningService.ensureModelLoaded();
-            } catch (e) {
-                toast.error(strings.activeLearning.messages.errorLoadModel);
-                return;
-            } finally {
-                toast.dismiss(toastId);
-            }
-        }
-
-        // Predict and add regions to current asset
-        try {
-            const updatedAssetMetadata = await this.activeLearningService.predictSegments(
-                canvas,
-                this.state.selectedAsset
-            );
-
-            await this.onAssetMetadataChanged(updatedAssetMetadata);
-            this.setState({ selectedAsset: updatedAssetMetadata });
-        } catch (e) {
-            throw new AppError(
-                ErrorCode.ActiveLearningPredictionError,
-                "Error predicting regions"
-            );
-        }
-    }
-
     /**
      * Navigates to the previous / next root asset on the sidebar
      * @param direction Number specifying asset navigation
@@ -742,6 +702,7 @@ export default class EditorSegmentPage extends React.Component<
     }
 
     private onBeforeAssetSelected = (): boolean => {
+        this.canvas.current.updateStateFromSvg();
         if (!this.state.isValid) {
             this.setState({ showInvalidRegionWarning: true });
         }
@@ -771,7 +732,6 @@ export default class EditorSegmentPage extends React.Component<
         // update asset
         try {
             if (this.state.segmentationAssets){
-                console.log(assetMetadata);
                 assetMetadata.svg = this.getSvgAsset(asset, this.state.segmentationAssets);
                 //assetMetadata.segmentationData = this.loadSegmentationData(asset, this.state.segmentationAssets);
             }

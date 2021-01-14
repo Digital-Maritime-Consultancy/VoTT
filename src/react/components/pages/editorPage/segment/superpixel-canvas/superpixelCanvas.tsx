@@ -196,6 +196,22 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
         }
     }
 
+    const initializeCanvas = () => {
+        const s = Snap("#"+id);
+        const paths = s.selectAll('path');
+        paths.forEach(function(element: Snap.Set){
+            const e = element.attr;
+            if (element.attr('tag') === AnnotationTag.EMPTY){
+                element.attr({...e, 
+                    style: `stroke-width: ${defaultLineWidth}; opacity: ${defaultOpacity};`,});
+            }
+            else{
+                element.attr({...e, 
+                    style: `stroke-width: ${defaultLineWidth}; opacity: ${annotatedOpacity};`,});
+            }
+        }, this);
+    }
+
     useEffect( () => {
         async function loadSVG(fileName: string) {
             await Snap.load(fileName, onSVGLoaded);
@@ -216,8 +232,9 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 if (gridReady) {
                     let s = Snap("#" + id);
                     if (s && s.selectAll("path").length){
-                        clearCanvas(id, defaultColor);
-                        annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
+                        initializeCanvas();
+                        //clearCanvas(id, defaultColor);
+                        //annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
                         updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
                             annotatingOpacity, highlightLineWidth, getCurrentMode, onCanvasUpdated,);
                     }
