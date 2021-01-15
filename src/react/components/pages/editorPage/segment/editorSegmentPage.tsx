@@ -229,7 +229,10 @@ export default class EditorSegmentPage extends React.Component<
                                         selectionMode={
                                             this.state.selectionMode
                                         }
-                                        svgFileName={this.state.selectedAsset.svg ? this.state.selectedAsset.svg.path : undefined}
+                                        selectedTag={
+                                            this.props.project.tags.find((e)=> e.name === this.state.selectedTag)}
+                                        svgFileName={
+                                            this.state.selectedAsset.svg ? this.state.selectedAsset.svg.path : undefined}
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}
                                         canvasWidth={1024}
@@ -335,6 +338,10 @@ export default class EditorSegmentPage extends React.Component<
      * @param tag Tag clicked
      */
     private onTagClicked = (tag: ITag): void => {
+        this.setTag(tag);
+    }
+
+    private setTag = (tag: ITag) => {
         if (
             this.state.selectionMode === ExtendedSelectionMode.ANNOTATING
         ) {

@@ -14,7 +14,7 @@ import { createContentBoundingBox } from "../../../../../common/layout";
 import { ITag } from "vott-react";
 import { strings } from "../../../../../common/strings";
 import { ExtendedSelectionMode } from "../editorPage";
-import { Annotation, AnnotationTag, clearCanvas, getBoundingBox, getSegmentsFromSvg, getSvgContent, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
+import { Annotation, AnnotationTag, clearCanvas, getAnnotatingTag, getBoundingBox, getSegmentsFromSvg, getSvgContent, SuperpixelCanvas } from "./superpixel-canvas/superpixelCanvas";
 import { saveSvg } from "../../../../../redux/actions/projectActions";
 
 export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
@@ -24,6 +24,7 @@ export interface ISegmentCanvasProps extends React.Props<SegmentCanvas> {
     canvasWidth: number;
     canvasHeight: number;
     svgFileName: string;
+    selectedTag: ITag;
     lockedTag: string;
     children?: ReactElement<AssetPreview>;
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
@@ -51,6 +52,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         project: null,
         lockedTag: undefined,
         svgFileName: "",
+        selectedTag: undefined,
     };
 
     public state: ISegmentCanvasState = {
@@ -83,6 +85,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
             });
+            this.applyingAnnotatingFromParent();
             this.invalidateSelection();
         }
         // Handles asset changing
@@ -90,6 +93,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             this.setState({ currentAsset: this.props.selectedAsset,
                 annotatedData: this.decomposeSegment(this.props.selectedAsset.segments, this.props.project.tags),
             });
+            this.applyingAnnotatingFromParent();
             this.invalidateSelection();
         }
 
@@ -125,10 +129,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         this.setState({gridOn: value});
     }
 
-    public invalidateSelection() {
-        this.lastSelectedTag = AnnotationTag.EMPTY;
-    }
-
     ////////////////////////////////////////////////////////////////
     // WARNING: this should be updated
     public updateCanvasToolsSegmentTags = (): void => {
@@ -156,8 +156,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public getAnnotating = (): ITag => {
-        const svg = document.getElementById(canvasId);
-        return svg ? { name: svg.getAttribute("color-profile"),  color: svg.getAttribute("name") } : undefined;
+        return getAnnotatingTag(canvasId);
     }
 
     public updateAnnotating(tag: string, color: string){
@@ -208,7 +207,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                     <div id="selection-zone">
                         <SuperpixelCanvas id={canvasId} svgName={this.props.svgFileName} 
                         annotatedData={this.state.annotatedData} 
-                        canvasWidth={this.props.canvasWidth} canvasHeight={this.props.canvasHeight} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
+                        annotating={this.props.selectedTag} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
                         getCurrentMode={() => this.props.selectionMode} onCanvasUpdated={this.onCanvasUpdated} />
                     </div>
                 </div>
@@ -257,6 +256,19 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     public forceResize = (): void => {
         this.onWindowResize();
+    }
+
+    private applyingAnnotatingFromParent = () => {
+        if (this.props.selectionMode === ExtendedSelectionMode.ANNOTATING){
+            console.log(this.props.selectedTag);
+            if (this.props.selectedTag) {
+                this.applyTag(this.props.selectedTag);
+            }
+        }
+    }
+
+    private invalidateSelection() {
+        this.lastSelectedTag = AnnotationTag.EMPTY;
     }
 
     private getDummySegment = (tag: string): ISegment => {

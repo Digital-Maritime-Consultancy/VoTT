@@ -1,5 +1,5 @@
 import { clear } from "console";
-import { ISegment } from "../../../../../../models/applicationState";
+import { ISegment, ITag } from "../../../../../../models/applicationState";
 import { ExtendedSelectionMode } from "../../editorPage";
 import { annotateCanvas } from "./canvasAnnotator";
 import { updateSVGEvent } from "./canvasEventLinker";
@@ -159,13 +159,18 @@ export const getSvgUrl = (canvasId: string, empty: boolean = false): string => {
 }
 
 interface SuperpixelCanvasProps {
-    id: string, canvasWidth: number, canvasHeight: number, 
+    id: string, annotating: ITag, 
      annotatedData: Annotation[], defaultColor: string, gridOn: boolean, svgName: string,
      getCurrentMode: () => ExtendedSelectionMode, onCanvasUpdated: (...params: any[]) => void,
 }
 
+export const getAnnotatingTag = (canvasId: string): ITag => {
+    const svg = document.getElementById(canvasId);
+    return svg ? { name: svg.getAttribute("color-profile"),  color: svg.getAttribute("name") } : undefined;
+}
+
 export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> = 
-({id, canvasWidth, canvasHeight, annotatedData, defaultColor, gridOn, svgName, getCurrentMode, onCanvasUpdated}) => {
+({id, annotating, annotatedData, defaultColor, gridOn, svgName, getCurrentMode, onCanvasUpdated}) => {
     const [ loaded, setLoaded ] = useState(false);
     const [ loadedSvgName, setLoadedSvgName ] = useState("");
     const [ gridReady, setGridReady ] = useState( false);
@@ -196,8 +201,8 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
         }
     }
 
-    const initializeCanvas = () => {
-        clearAnnotating(id, defaultColor);
+    const initializeCanvas = (annotating?: ITag) => {
+        clearAnnotating(id, defaultColor, annotating);
         const s = Snap("#"+id);
         const paths = s.selectAll('path');
         paths.forEach(function(element: Snap.Set){
@@ -233,7 +238,7 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                 if (gridReady) {
                     let s = Snap("#" + id);
                     if (s && s.selectAll("path").length){
-                        initializeCanvas();
+                        initializeCanvas(annotating);
                         //clearCanvas(id, defaultColor);
                         //annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
                         updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
@@ -274,8 +279,13 @@ export const clearCanvas = (canvasId: string, defaultColor: string) => {
     }, this);
 }
 
-const clearAnnotating = (canvasId: string, defaultColor: string) => {
+const clearAnnotating = (canvasId: string, defaultColor: string, annotating?: ITag) => {
     const dom = document.getElementById(canvasId);
-    dom.setAttribute("color-profile", AnnotationTag.EMPTY);
-    dom.setAttribute("name", defaultColor);
+    if (annotating) {
+        dom.setAttribute("color-profile", annotating.name);
+        dom.setAttribute("name", annotating.color);
+    } else {
+        dom.setAttribute("color-profile", AnnotationTag.EMPTY);
+        dom.setAttribute("name", defaultColor);
+    }
 }
