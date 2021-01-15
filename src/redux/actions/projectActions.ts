@@ -31,7 +31,6 @@ export default interface IProjectActions {
     loadAssets(project: IProject): Promise<IAsset[]>;
     loadSvg(project: IProject): Promise<IAsset[]>;
     saveSvg(project: IProject, fileName: string, content: string): Promise<IAsset[]>;
-    loadSegmentationData(project: IProject): Promise<IAsset[]>;
     loadImageMetadata(project: IProject, filePath: string): Promise<object>;
     saveImageMetadata(project: IProject, filePath: string, content: object): Promise<void>;
     loadAssetMetadata(project: IProject, asset: IAsset): Promise<IAssetMetadata>;
@@ -139,19 +138,6 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
         const assetService = new AssetService(project);
         const assets = await assetService.getAssets();
         dispatch(loadProjectAssetsAction(assets));
-        return assets;
-    };
-}
-
-/**
- * Gets metadata from project, dispatches load assets action and returns assets
- * @param project - Project from which to load assets
- */
-export function loadSegmentationData(project: IProject): (dispatch: Dispatch) => Promise<IAsset[]> {
-    return async (dispatch: Dispatch) => {
-        const assetService = new AssetService(project);
-        const assets = await assetService.getSegmentationData();
-        dispatch(loadSegmentationDataAction(assets));
         return assets;
     };
 }
@@ -361,13 +347,6 @@ export interface ILoadProjectAssetsAction extends IPayloadAction<string, IAsset[
 }
 
 /**
- * Load segmentation data action type
- */
-export interface ILoadSegmentationDataAction extends IPayloadAction<string, IAsset[]> {
-    type: ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS;
-}
-
-/**
  * Load svg action type
  */
 export interface ILoadSvgAction extends IPayloadAction<string, object> {
@@ -445,17 +424,12 @@ export const deleteProjectAction = createPayloadAction<IDeleteProjectAction>(Act
 export const loadProjectAssetsAction =
     createPayloadAction<ILoadProjectAssetsAction>(ActionTypes.LOAD_PROJECT_ASSETS_SUCCESS);
 /**
- * Instance of Load Metadata action
- */
-export const loadSegmentationDataAction =
-    createPayloadAction<ILoadSegmentationDataAction>(ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS);
-/**
- * Instance of Load Metadata action
+ * Instance of Load svg action
  */
 export const loadSvgAction =
     createPayloadAction<ILoadSvgAction>(ActionTypes.LOAD_SVG_SUCCESS);
 /**
- * Instance of Load Metadata action
+ * Instance of Save svg action
  */
 export const saveSvgAction =
     createPayloadAction<ISaveSvgAction>(ActionTypes.SAVE_SVG_SUCCESS);

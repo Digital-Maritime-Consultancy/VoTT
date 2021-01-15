@@ -264,21 +264,19 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     private onCanvasUpdated = async (
         tag: string,
     ): Promise<void> => {
-        if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) {
+        if (tag && this.props.selectionMode === ExtendedSelectionMode.NONE) { // mouse up for selection
             const selectedSegment = this.getSelectedSegment(tag);
             if (this.props.onSelectedSegmentChanged && this.lastSelectedTag !== tag) {
                 this.props.onSelectedSegmentChanged(selectedSegment);
             }
             this.lastSelectedTag = tag;
         }
-        else if (tag) {
+        else if (tag) { // mouse up for annotation
             const selectedSegment = this.getSelectedSegment(tag);
             if (!selectedSegment && tag !== AnnotationTag.EMPTY) {
                 const segments = [ ...this.state.currentAsset.segments, this.getDummySegment(tag) ];
                 this.onSegmentsUpdated(segments);
             }
-            //this.updateStateFromSvg();
-            //this.storeSvgFile();
         }
     }
 

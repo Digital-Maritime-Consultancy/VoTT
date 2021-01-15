@@ -291,7 +291,6 @@ export interface IAssetMetadata {
     regions: IRegion[];
     segments: ISegment[];
     version: string;
-    segmentationData?: IAsset;
     svg?: IAsset;
 }
 
@@ -384,8 +383,8 @@ export interface IPoint {
  * @description - Defines the type of asset within a project
  * @member Image - Specifies an asset as an image
  * @member Video - Specifies an asset as a video
- * @member SegmentationData - Specifies a json-ized segmentation labeling result
  * @member ImageMetadata - Specifies an asset as a metadata for an image
+ * @member SvgImage - Specifies a svg-nized segmentation labeling result
  */
 export enum AssetType {
     Unknown = 0,
@@ -393,9 +392,8 @@ export enum AssetType {
     Video = 2,
     VideoFrame = 3,
     TFRecord = 4,
-    SegmentationData = 5,
-    ImageMetadata = 6,
-    SvgImage = 7,
+    ImageMetadata = 5,
+    SvgImage = 6,
 }
 
 /**

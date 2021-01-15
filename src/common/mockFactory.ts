@@ -138,20 +138,6 @@ export default class MockFactory {
                     },
                 };
                 break;
-            case AssetType.SegmentationData:
-                testAsset = {
-                    id: `segmentation-${name}`,
-                    format: "seg",
-                    name: `segmentationasset-${name}.seg`,
-                    path: `${path}.seg`,
-                    state: assetState,
-                    type: assetType,
-                    size: {
-                        width: 800,
-                        height: 600,
-                    },
-                };
-                break;
             case AssetType.ImageMetadata:
                 testAsset = {
                     id: `imagemetadata-${name}`,
@@ -221,27 +207,6 @@ export default class MockFactory {
             path: encodeFileURI(`C:\\Desktop\\videoasset${name}.mp4`),
             state: { [EditorContext.Geometry]: assetState },
             type: AssetType.Video,
-            size: {
-                width: 800,
-                height: 600,
-            },
-        };
-    }
-
-    /**
-     * @name Create Segmentation data Asset
-     * @description Creates fake segmentation data IAsset
-     * @param name Name of asset
-     * @param assetState State of asset
-     */
-    public static createSegmentationDataTestAsset(name: string, assetState: AssetState = AssetState.NotVisited): IAsset {
-        return {
-            id: `segmentation-${name}`,
-            format: "seg",
-            name: `segmentationasset-${name}.seg`,
-            path: encodeFileURI(`C:\\Desktop\\segmentationasset${name}.seg`),
-            state: { [EditorContext.Segment]: assetState },
-            type: AssetType.SegmentationData,
             size: {
                 width: 800,
                 height: 600,
@@ -350,13 +315,12 @@ export default class MockFactory {
      * @param asset Test asset
      */
     public static createTestAssetMetadata(
-        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], segmentationData?: IAsset, svg?: IAsset): IAssetMetadata {
+        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], svg?: IAsset): IAssetMetadata {
         return {
             asset: asset || MockFactory.createTestAsset(),
             regions: regions || [],
             segments: segments || [],
             version: appInfo.version,
-            segmentationData: segmentationData || MockFactory.createTestAsset("string-seg",AssetState.NotVisited, "", AssetType.SegmentationData),
             svg: svg || MockFactory.createTestAsset("string-svg", AssetState.NotVisited, "", AssetType.SvgImage),
         };
     }
@@ -957,7 +921,6 @@ export default class MockFactory {
             deleteProject: jest.fn(() => Promise.resolve()),
             closeProject: jest.fn(() => Promise.resolve()),
             loadAssets: jest.fn(() => Promise.resolve()),
-            loadSegmentationData: jest.fn(() => Promise.resolve()),
             loadImageMetadata: jest.fn(() => Promise.resolve()),
             saveImageMetadata: jest.fn(() => Promise.resolve()),
             loadSvg: jest.fn(() => Promise.resolve()),

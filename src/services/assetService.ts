@@ -88,8 +88,6 @@ export class AssetService {
                 return AssetType.Video;
             case "tfrecord":
                 return AssetType.TFRecord;
-            case "seg":
-                return AssetType.SegmentationData;
             case "json":
                 return AssetType.ImageMetadata;
             case "svg":
@@ -168,14 +166,6 @@ export class AssetService {
      */
     public async getAssets(): Promise<IAsset[]> {
         return await this.assetProvider.getAssets();
-    }
-
-    /**
-     * Get segmentation data from provider
-     */
-    public async getSegmentationData(): Promise<IAsset[]> {
-        const assets = await this.metadataImportProvider.getAssets();
-        return assets.filter((e) => e.format === 'seg');
     }
 
     /**
@@ -262,7 +252,6 @@ export class AssetService {
                     asset: { ...asset },
                     regions: await this.getRegionsFromTFRecord(asset),
                     segments: await this.getSegmentsFromTFRecord(asset),
-                    segmentationData: undefined,
                     svg: undefined,
                     version: appInfo.version,
                 };
@@ -271,7 +260,6 @@ export class AssetService {
                     asset: { ...asset },
                     regions: [],
                     segments: [],
-                    segmentationData: undefined,
                     svg: undefined,
                     version: appInfo.version,
                 };

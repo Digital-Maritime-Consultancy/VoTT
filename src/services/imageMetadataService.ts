@@ -136,7 +136,6 @@ export class ImageMetadataService {
                     asset: { ...asset },
                     regions: await this.getRegionsFromTFRecord(asset),
                     segments: await this.getSegmentsFromTFRecord(asset),
-                    segmentationData: undefined,
                     svg: undefined,
                     version: appInfo.version,
                 };
@@ -145,7 +144,6 @@ export class ImageMetadataService {
                     asset: { ...asset },
                     regions: [],
                     segments: [],
-                    segmentationData: undefined,
                     svg: undefined,
                     version: appInfo.version,
                 };

@@ -803,13 +803,6 @@ export default class EditorSegmentPage extends React.Component<
             (asset) => !asset.parent,
         );
 
-        /* to be deleted
-        // Get all root assets from source asset provider
-        const sourceSegAssets = await this.props.actions.loadSegmentationData(
-            this.props.project,
-        );
-        */
-
         const sourceSegAssets = await this.props.actions.loadSvg(
             this.props.project,
         );
@@ -838,9 +831,9 @@ export default class EditorSegmentPage extends React.Component<
     }
 
     private getSvgAsset(asset: IAsset, segmentationAssets: IAsset[]): IAsset {
-        const segmentationDataAsset = segmentationAssets.filter((e) => e.name.includes(asset.name));
-        if (segmentationDataAsset && segmentationDataAsset.length) {
-            return segmentationDataAsset[0];
+        const svgAsset = segmentationAssets.filter((e) => e.name.includes(asset.name));
+        if (svgAsset && svgAsset.length) {
+            return svgAsset[0];
         }
     }
 
