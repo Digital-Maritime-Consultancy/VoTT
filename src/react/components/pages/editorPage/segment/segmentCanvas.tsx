@@ -77,6 +77,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public componentWillUnmount() {
+        this.storeCurrentCanvas();
         window.removeEventListener("resize", this.onWindowResize);
     }
 
@@ -109,11 +110,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
             // this.refreshCanvas();
         }
 
-        // When the project tags change re-apply tags to segments
-        if (this.props.project && this.props.project.tags !== prevProps.project.tags) {
-            this.updateCanvasToolsSegmentTags();
-        }
-
         // Handles when the canvas is enabled & disabled
         if (prevState.enabled !== this.state.enabled) {
             // When the canvas is ready to display
@@ -127,20 +123,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     public setGridOn = (value: boolean) => {
         this.setState({gridOn: value});
-    }
-
-    ////////////////////////////////////////////////////////////////
-    // WARNING: this should be updated
-    public updateCanvasToolsSegmentTags = (): void => {
-        console.log("To be updated");
-        for (const segment of this.state.currentAsset.segments) {
-            /*
-            this.editor.updateTagsById(
-                segment.id,
-                CanvasHelpers.getTagsDescriptor(this.props.project.tags, region),
-            );
-            */
-        }
     }
 
     public setSelectionMode(selectionMode: ExtendedSelectionMode){
@@ -233,6 +215,11 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         });
     }
 
+    public storeCurrentCanvas = async() => {
+        await this.updateStateFromSvg();
+        await this.storeSvgFile();
+    }
+
     public updateStateFromSvg = () => {
         const segments = getSegmentsFromSvg(canvasId);
         if (segments.length > 0 || this.state.currentAsset.segments.length > 0){
@@ -250,7 +237,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 }
                 return e;
             });
-            this.onSegmentsUpdated(integratedSegments);
+            this.onSegmentsUpdated(integratedSegments.filter((e) => e.superpixel.length));
         }
     }
 
@@ -260,7 +247,6 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private applyingAnnotatingFromParent = () => {
         if (this.props.selectionMode === ExtendedSelectionMode.ANNOTATING){
-            console.log(this.props.selectedTag);
             if (this.props.selectedTag) {
                 this.applyTag(this.props.selectedTag);
             }
@@ -292,7 +278,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 this.onSegmentsUpdated(segments);
             }
             //this.updateStateFromSvg();
-            this.storeSvgFile();
+            //this.storeSvgFile();
         }
     }
 
