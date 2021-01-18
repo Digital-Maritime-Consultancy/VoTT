@@ -239,8 +239,6 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
                     let s = Snap("#" + id);
                     if (s && s.selectAll("path").length){
                         initializeCanvas(annotating);
-                        //clearCanvas(id, defaultColor);
-                        //annotateCanvas(annotatedData, defaultColor, defaultOpacity, defaultLineWidth, annotatedOpacity);
                         updateSVGEvent(canvasContainerId, id, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth,
                             annotatingOpacity, highlightLineWidth, getCurrentMode, onCanvasUpdated,);
                     }
@@ -258,14 +256,46 @@ export const SuperpixelCanvas: React.FC<SuperpixelCanvasProps> =
         </div>);
 }
 
+const arrayMin = (arr) => {
+    var len = arr.length, min = Infinity;
+    while (len--) {
+      if (arr[len] < min) {
+        min = arr[len];
+      }
+    }
+    return min;
+  };
+  
+const arrayMax = (arr) => {
+    var len = arr.length, max = -Infinity;
+    while (len--) {
+      if (arr[len] > max) {
+        max = arr[len];
+      }
+    }
+    return max;
+  };
+
 export const getBoundingBox = (canvasId: string, ids: number[]) => {
-    let pathString = "";
-    ids.forEach( (id) => {const s = document.getElementById("sp"+id)!; pathString += (s.getAttribute("d") + " ") });
-    const s = Snap("#"+canvasId);
-    const path = s.path(pathString);
-    const bbox = path.getBBox();
-    path.remove();
-    return { left: bbox.x, top: bbox.y, width: bbox.width, height: bbox.height };
+    let min_x= 99999;
+    let max_x= 0;
+    let min_y= 99999;
+    let max_y= 0;
+    ids.forEach( (id) => {
+        const s = document.getElementById("sp"+id)!; 
+        const filtered = s.getAttribute("d").split(' ').filter((e) => (e !== "M" && e!== 'L' && e!=='Z')).map(Number);
+        const x = filtered.filter((a,i)=>i%2===0);
+        const y = filtered.filter((a,i)=>i%2===1);
+        const calMaxX = arrayMax(x);
+        const calMaxY = arrayMax(y);
+        const calMinX = arrayMin(x);
+        const calMinY = arrayMin(y);
+        max_x = max_x >= calMaxX ? max_x : calMaxX;
+        min_x = min_x <= calMinX ? min_x : calMinX;
+        max_y = max_y >= calMaxY ? max_y : calMaxY;
+        min_y = min_y <= calMinY ? min_y : calMinY;
+    });
+    return {left: min_x, top: min_y, width: max_x - min_x, height: max_y - min_y};
 }
 
 export const clearCanvas = (canvasId: string, defaultColor: string) => {
