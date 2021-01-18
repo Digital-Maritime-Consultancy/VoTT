@@ -216,8 +216,9 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     public storeCurrentCanvas = async() => {
+        const element = document.getElementById(canvasId);
         await this.updateStateFromSvg();
-        await this.storeSvgFile();
+        await this.storeSvgFile(element);
     }
 
     public updateStateFromSvg = () => {
@@ -280,8 +281,8 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
         }
     }
 
-    private storeSvgFile = () => {
-        this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasId) );
+    private storeSvgFile = (canvasElement: HTMLElement) => {
+        this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasElement) );
     }
 
     private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
@@ -299,7 +300,7 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
 
     private removeAllSegments = (removeState: boolean = true) => {
         clearCanvas(canvasId, this.defaultColor);
-        this.storeSvgFile();
+        this.storeSvgFile(document.getElementById(canvasId));
         if (removeState) {
             this.deleteSegmentsFromAsset(this.state.currentAsset.segments);
         }

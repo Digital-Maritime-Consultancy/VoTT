@@ -116,44 +116,44 @@ const configureSvg = (svgElement: HTMLElement, empty: boolean) => {
     return svg;
 }
 
-const prepare2Export = (canvasId: string, empty: boolean = false) => {
+const prepare2Export = (canvasElement: HTMLElement, empty: boolean = false) => {
     const newElement = document.createElement("exportSvg");
-    const clonedNode = document.getElementById(canvasId).cloneNode(true);
+    const clonedNode = canvasElement.cloneNode(true);
     newElement.appendChild(clonedNode);
     return configureSvg(newElement, empty);
 }
 
-export const exportToPng = (canvasId: string, fileName: string, backgroundColor: string = "#000000", callback?: (fileName: string, content: string) => any) => {
+export const exportToPng = (canvasElement: HTMLElement, fileName: string, backgroundColor: string = "#000000", callback?: (fileName: string, content: string) => any) => {
     let fileNameSplit = fileName.split("/");
     let finalFileName = fileNameSplit[fileNameSplit.length - 1].split(".")[0] + ".png";
 
     if (callback){
-        svgToPng.svgAsPngUri(prepare2Export(canvasId),
+        svgToPng.svgAsPngUri(prepare2Export(canvasElement),
         finalFileName, {backgroundColor: backgroundColor}).then((uri: string) => callback(finalFileName, uri));
     } else {
-        svgToPng.saveSvgAsPng(prepare2Export(canvasId), finalFileName, {backgroundColor: backgroundColor})
+        svgToPng.saveSvgAsPng(prepare2Export(canvasElement), finalFileName, {backgroundColor: backgroundColor})
     }
 }
 
-export const exportToSvg = (canvasId: string, fileName: string,
+export const exportToSvg = (canvasElement: HTMLElement, fileName: string,
     callback?: (fileName: string, content: string) => any) => {
     let fileNameSplit = fileName.split("/");
     let finalFileName = fileNameSplit[fileNameSplit.length - 1].split(".")[0] + ".svg";
 
     if (callback){
-        const uri = "data:image/svg+xml;utf8,"+ prepare2Export(canvasId).outerHTML!;
+        const uri = "data:image/svg+xml;utf8,"+ prepare2Export(canvasElement).outerHTML!;
         callback(finalFileName, uri);
     } else {
-        console.log(prepare2Export(canvasId).outerHTML!);
+        console.log(prepare2Export(canvasElement).outerHTML!);
     }
 }
 
-export const getSvgContent = (canvasId: string) => {
-    return prepare2Export(canvasId).outerHTML!;
+export const getSvgContent = (canvasElement: HTMLElement) => {
+    return prepare2Export(canvasElement).outerHTML!;
 }
 
-export const getSvgUrl = (canvasId: string, empty: boolean = false): string => {
-    const content = prepare2Export(canvasId, empty).outerHTML!;
+export const getSvgUrl = (canvasElement: HTMLElement, empty: boolean = false): string => {
+    const content = prepare2Export(canvasElement, empty).outerHTML!;
     var file = new Blob([content], { type: 'image/svg+xml' });
     return URL.createObjectURL(file);
 }
