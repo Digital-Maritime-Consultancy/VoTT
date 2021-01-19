@@ -81,6 +81,7 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                     updateSuperpixelSVG(superpixel,
                         backupColor === AnnotationTag.EMPTY ? defaultColor : backupColor,
                         currentColor === AnnotationTag.EMPTY ? defaultOpacity : annotatedOpacity,
+                        ? defaultOpacity : annotatedOpacity,
                         defaultLineWidth);
                 }
             })
