@@ -248,6 +248,7 @@ export const spanish: IAppStrings = {
             activeLearning: "Aprendizaje Activo",
             annotateSegments: "Annotate Segments",
             removeAnnotation: "Remove Annotation",
+            showSegBoundary: "Show Segment Boundary",
         },
         videoPlayer: {
             previousTaggedFrame: {

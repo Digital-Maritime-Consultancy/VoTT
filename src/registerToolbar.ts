@@ -72,7 +72,7 @@ export default function registerToolbar() {
         name: ToolbarItemName.DrawPolyline,
         context: [EditorContext.Geometry],
         tooltip: strings.editorPage.toolbar.drawPolyline,
-        icon: "fa-grip-lines",
+        icon: "fa-signature",
         group: ToolbarItemGroup.Canvas,
         type: ToolbarItemType.State,
         accelerators: ["L", "l"],
@@ -160,12 +160,22 @@ export default function registerToolbar() {
 
     ToolbarItemFactory.register({
         name: ToolbarItemName.ActiveLearning,
-        context: [EditorContext.Geometry, EditorContext.Segment],
+        context: [EditorContext.Geometry],
         tooltip: strings.editorPage.toolbar.activeLearning,
         icon: "fas fa-graduation-cap",
         group: ToolbarItemGroup.Canvas,
         type: ToolbarItemType.Action,
         accelerators: ["CmdOrCtrl+D", "CmdOrCtrl+d"],
+    });
+
+    ToolbarItemFactory.register({
+        name: ToolbarItemName.ShowSegBoundary,
+        context: [EditorContext.Segment],
+        tooltip: strings.editorPage.toolbar.showSegBoundary,
+        icon: "fa-grip-lines",
+        group: ToolbarItemGroup.Canvas,
+        type: ToolbarItemType.Action,
+        accelerators: ["G", "g"],
     });
 
     ToolbarItemFactory.register({

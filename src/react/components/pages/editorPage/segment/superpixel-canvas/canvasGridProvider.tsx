@@ -17,6 +17,9 @@ export const CanvasGridProvider: React.FC<CanvasGridProviderProps> =
         document.getElementById(containerId).append(grid!);
         document.getElementById(containerId).firstElementChild.setAttribute("id",id);
         document.getElementById(containerId).firstElementChild.setAttribute("class","img-grid");
+        document.getElementById(containerId).firstElementChild.removeAttribute("color-profile");
+        document.getElementById(containerId).firstElementChild.removeAttribute("content-script-type");
+        document.getElementById(containerId).firstElementChild.removeAttribute("name");
         const children = document.getElementById(id).children;
         for (var i=0; i<children!.length ; i++){
             if ( children![i].tagName === "path") {
@@ -46,5 +49,5 @@ export const CanvasGridProvider: React.FC<CanvasGridProviderProps> =
         onGridReady();
     }, [gridOn]);
 
-    return (<div id={containerId}></div>);
+    return (<div id={containerId} className={"img-grid"}></div>);
 }

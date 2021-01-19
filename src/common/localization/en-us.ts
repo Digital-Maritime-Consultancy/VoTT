@@ -246,6 +246,7 @@ export const english: IAppStrings = {
             activeLearning: "Active Learning",
             annotateSegments: "Annotate Segments",
             removeAnnotation: "Remove Annotation",
+            showSegBoundary: "Show Segment Boundary",
         },
         videoPlayer: {
             previousTaggedFrame: {

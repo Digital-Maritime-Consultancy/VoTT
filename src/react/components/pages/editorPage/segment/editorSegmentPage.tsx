@@ -1,9 +1,7 @@
 import _ from "lodash";
 import React, { RefObject } from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps } from "react-router-dom";
 import SplitPane from "react-split-pane";
-import { bindActionCreators } from "redux";
 import HtmlFileReader from "../../../../../common/htmlFileReader";
 import { strings } from "../../../../../common/strings";
 import {
@@ -13,8 +11,6 @@ import {
     IAsset,
     IAssetMetadata,
     ITag,
-    AppError,
-    ErrorCode,
     EditorContext,
     ISegment,
 } from "../../../../../models/applicationState";
@@ -44,8 +40,8 @@ import {
     ExtendedSelectionMode,
 } from "../editorPage";
 import SegmentCanvas from "./segmentCanvas";
-import { AnnotationTag } from "./superpixelCanvas";
 import PropertyForm from "../../../common/propertyForm/propertyForm";
+import { AnnotationTag } from "./superpixel-canvas/superpixelCanvas";
 
 /**
  * Properties for Editor Page
@@ -87,9 +83,9 @@ export default class EditorSegmentPage extends React.Component<
         isValid: true,
         showInvalidRegionWarning: false,
         context: EditorContext.Segment,
+        gridOn: false,
     };
 
-    private activeLearningService: ActiveLearningService = null;
     private loadingProjectAssets: boolean = false;
     private toolbarItems: IToolbarItemRegistration[] = ToolbarItemFactory.getToolbarItems(
         EditorContext.Segment,
@@ -109,12 +105,7 @@ export default class EditorSegmentPage extends React.Component<
             );
             await this.props.actions.loadProject(project);
         }
-
-        this.activeLearningService = new ActiveLearningService(
-            this.props.project.activeLearningSettings,
-        );
         this.onSelectedSegmentChanged = this.onSelectedSegmentChanged.bind(this);
-
         this.onSelectionModeChanged(this.state.selectionMode);
     }
 
@@ -224,9 +215,14 @@ export default class EditorSegmentPage extends React.Component<
                                         }
                                         onCanvasRendered={this.onCanvasRendered}
                                         onSelectedSegmentChanged={this.onSelectedSegmentChanged}
+                                        onSaveSvg={this.storeStateToSvgFile}
                                         selectionMode={
                                             this.state.selectionMode
                                         }
+                                        selectedTag={
+                                            this.props.project.tags.find((e)=> e.name === this.state.selectedTag)}
+                                        svgFileName={
+                                            this.state.selectedAsset.svg ? this.state.selectedAsset.svg.path : undefined}
                                         project={this.props.project}
                                         lockedTag={this.state.lockedTag}
                                         canvasWidth={1024}
@@ -332,6 +328,10 @@ export default class EditorSegmentPage extends React.Component<
      * @param tag Tag clicked
      */
     private onTagClicked = (tag: ITag): void => {
+        this.setTag(tag);
+    }
+
+    private setTag = (tag: ITag) => {
         if (
             this.state.selectionMode === ExtendedSelectionMode.ANNOTATING
         ) {
@@ -342,6 +342,13 @@ export default class EditorSegmentPage extends React.Component<
                 },
                 () => this.canvas.current.applyTag(tag)
             );
+        }
+    }
+
+    private storeStateToSvgFile = async (fileName: string, content: string): Promise<void> => {
+        if (this.state.selectedAsset && this.state.selectedAsset.svg) {
+            await this.props.actions.saveSvg(
+                this.props.project, fileName, content);
         }
     }
 
@@ -609,7 +616,6 @@ export default class EditorSegmentPage extends React.Component<
             if (index >= 0 && tag.color !== tags[index].color){
                 if (this.canvas && this.canvas.current.getAnnotating() && this.canvas.current.getAnnotating().name === tag.name){
                     this.canvas.current.updateAnnotating(tags[index].name, tags[index].color);
-                    this.canvas.current.refreshCanvas();
                 }
             }
         });
@@ -652,60 +658,26 @@ export default class EditorSegmentPage extends React.Component<
                 this.setState({
                     selectionMode: ExtendedSelectionMode.NONE,
                 });
+                this.canvas.current.setGridOn(!this.canvas.current.state.gridOn);
                 this.onSelectionModeChanged(ExtendedSelectionMode.NONE);
                 break;
             case ToolbarItemName.PreviousAsset:
+                this.canvas.current.storeCurrentCanvas();
                 await this.goToRootAsset(-1);
                 break;
             case ToolbarItemName.NextAsset:
+                this.canvas.current.storeCurrentCanvas();
                 await this.goToRootAsset(1);
                 break;
             case ToolbarItemName.RemoveAllSegments:
                 this.canvas.current.confirmRemoveAllSegments();
                 break;
-            case ToolbarItemName.ActiveLearning:
-                await this.predictSegments();
+            case ToolbarItemName.SaveProject:
+                await this.canvas.current.storeCurrentCanvas();
                 break;
-        }
-    }
-
-    private predictSegments = async (canvas?: HTMLCanvasElement) => {
-        canvas = canvas || document.querySelector("canvas");
-        if (!canvas) {
-            return;
-        }
-
-        // Load the configured ML model
-        if (!this.activeLearningService.isModelLoaded()) {
-            let toastId: number = null;
-            try {
-                toastId = toast.info(
-                    strings.activeLearning.messages.loadingModel,
-                    { autoClose: false }
-                );
-                await this.activeLearningService.ensureModelLoaded();
-            } catch (e) {
-                toast.error(strings.activeLearning.messages.errorLoadModel);
-                return;
-            } finally {
-                toast.dismiss(toastId);
-            }
-        }
-
-        // Predict and add regions to current asset
-        try {
-            const updatedAssetMetadata = await this.activeLearningService.predictSegments(
-                canvas,
-                this.state.selectedAsset
-            );
-
-            await this.onAssetMetadataChanged(updatedAssetMetadata);
-            this.setState({ selectedAsset: updatedAssetMetadata });
-        } catch (e) {
-            throw new AppError(
-                ErrorCode.ActiveLearningPredictionError,
-                "Error predicting regions"
-            );
+            case ToolbarItemName.ExportProject:
+                await this.canvas.current.storeCurrentCanvas();
+                break;
         }
     }
 
@@ -735,6 +707,7 @@ export default class EditorSegmentPage extends React.Component<
     }
 
     private onBeforeAssetSelected = (): boolean => {
+        this.canvas.current.storeCurrentCanvas();
         if (!this.state.isValid) {
             this.setState({ showInvalidRegionWarning: true });
         }
@@ -764,7 +737,7 @@ export default class EditorSegmentPage extends React.Component<
         // update asset
         try {
             if (this.state.segmentationAssets){
-                assetMetadata.segmentationData = this.loadSegmentationData(asset, this.state.segmentationAssets);
+                assetMetadata.svg = this.getSvgAsset(asset, this.state.segmentationAssets);
             }
         } catch (err) {
             console.warn("Error in loading segmentation data file");
@@ -830,8 +803,7 @@ export default class EditorSegmentPage extends React.Component<
             (asset) => !asset.parent,
         );
 
-        // Get all root assets from source asset provider
-        const sourceSegAssets = await this.props.actions.loadSegmentationData(
+        const sourceSegAssets = await this.props.actions.loadSvg(
             this.props.project,
         );
 
@@ -840,7 +812,7 @@ export default class EditorSegmentPage extends React.Component<
             .concat(sourceSegAssets)
             .uniqBy((asset) => asset.id)
             .value();
-        
+
         this.setState(
             {
                 assets: rootAssets,
@@ -858,10 +830,10 @@ export default class EditorSegmentPage extends React.Component<
 
     }
 
-    private loadSegmentationData(asset: IAsset, metadataAssets: IAsset[]): IAsset{
-        const segmentationDataAsset = metadataAssets.filter((e) => e.name.includes(asset.name));
-        if (segmentationDataAsset && segmentationDataAsset.length) {
-            return segmentationDataAsset[0];
+    private getSvgAsset(asset: IAsset, segmentationAssets: IAsset[]): IAsset {
+        const svgAsset = segmentationAssets.filter((e) => e.name.includes(asset.name));
+        if (svgAsset && svgAsset.length) {
+            return svgAsset[0];
         }
     }
 

@@ -249,6 +249,7 @@ export interface IAppStrings {
             activeLearning: string;
             annotateSegments: string;
             removeAnnotation: string;
+            showSegBoundary: string;
         }
         videoPlayer: {
             nextTaggedFrame: {

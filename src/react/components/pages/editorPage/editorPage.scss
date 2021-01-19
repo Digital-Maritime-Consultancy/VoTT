@@ -369,3 +369,15 @@ canvas {
 .Resizer.disabled:hover {
   border-color: transparent;
 }
+
+.img-overlay-wrap svg {
+  position: relative;
+  display: inline-block; /* <= shrinks container to image size */
+}
+
+.img-grid svg{
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

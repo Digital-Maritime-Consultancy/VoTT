@@ -1,20 +1,22 @@
-import { AnnotationTag, ITag, SPId2number, } from "./superpixelCanvas";
+import { ISegmentOffset } from "../../../../../../models/applicationState";
+import { ExtendedSelectionMode } from "../../editorPage";
+import { AnnotationTag, SPId2number, } from "./superpixelCanvas";
 const Snap = require("snapsvg-cjs");
 
 export const updateSVGEvent = (canvasContainerId: string, canvasId: string, defaultColor: string,
     defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, annotatingOpacity: number, highlightLineWidth: number,
-    onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void) => {
+    getCurrentMode: () => ExtendedSelectionMode, onCanvasUpdated: (...params: any[]) => void) => {
     const s = Snap("#" + canvasContainerId);
     const elements = s.selectAll("path");
     elements.forEach((superpixel: any) => {
         return configureSuperpixelEvent(canvasId, superpixel, defaultColor, defaultOpacity,
-            annotatedOpacity, defaultLineWidth, annotatingOpacity, highlightLineWidth, onSegmentsUpdated, onSelectedTagUpdated);
+            annotatedOpacity, defaultLineWidth, annotatingOpacity, highlightLineWidth, getCurrentMode, onCanvasUpdated);
     });
 }
 
 const clearSuperpixel = (snapElement: Snap.Paper, defaultcolor: string, area: number, 
-        defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, onSegmentsUpdated: ISegmentsCallback) => {
-    paintSuperpixel(snapElement, AnnotationTag.DEANNOTATING, defaultcolor, area, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+        defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number) => {
+    paintSuperpixel(snapElement, AnnotationTag.DEANNOTATING, defaultcolor, area, defaultOpacity, annotatedOpacity, defaultLineWidth);
 }
 
 const updateSuperpixelSVG = (component: Snap.Element, fill: string, opacity: number, strokeWidth: number, tag?: string, color?: string ) => {
@@ -26,25 +28,20 @@ const updateSuperpixelSVG = (component: Snap.Element, fill: string, opacity: num
     }
 }
 
-const paintAndUpdateState = (event: MouseEvent, superpixel: any, defaultcolor: string, defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, onSegmentsUpdated: ISegmentsCallback) => {
-    const annotatingTag = superpixel.parent().attr()["color-profile"];
+const paintAndUpdateState = (event: MouseEvent, superpixel: any, annotatingTag: string, fillColor: string, defaultcolor: string, defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number) => {
     if(event.buttons === 1 && annotatingTag !== AnnotationTag.EMPTY){
-        const fillColor: string = superpixel.parent().attr()["name"];
-        paintSuperpixel(superpixel, annotatingTag, fillColor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
-        superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}); // storing color
+        paintSuperpixel(superpixel, annotatingTag, fillColor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth);
     }
     else if(event.buttons === 2 && annotatingTag !== AnnotationTag.EMPTY){ // removing
-        clearSuperpixel(superpixel, defaultcolor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated); // area should be updated
-        superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultcolor}); // storing color
+        clearSuperpixel(superpixel, defaultcolor, parseInt(superpixel.attr()["area"]), defaultOpacity, annotatedOpacity, defaultLineWidth); // area should be updated
     }
 };
 
-type ISegmentsCallback = (segments: ITag[]) => void;
+let clicked = false;
 
 export const paintSuperpixel =
         (snapElement: Snap.Paper, tag: string, color: string, area: number,
-            defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number,
-            onSegmentsUpdated: ISegmentsCallback) => {
+            defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number) => {
     if (tag === AnnotationTag.EMPTY || color === AnnotationTag.EMPTY) {
         return ;
     }
@@ -52,7 +49,6 @@ export const paintSuperpixel =
         const coloringTag = tag === AnnotationTag.DEANNOTATING ? AnnotationTag.EMPTY : tag;
         updateSuperpixelSVG(snapElement, color, coloringTag === AnnotationTag.EMPTY ? defaultOpacity : annotatedOpacity,
             defaultLineWidth, coloringTag, tag === AnnotationTag.DEANNOTATING ? AnnotationTag.EMPTY : color);
-            onSegmentsUpdated([{tag, area, superpixelId: SPId2number(snapElement.attr("id")) }]);
     }
     else{
         console.log("ERROR: a superpixel was not able to find!");
@@ -61,9 +57,10 @@ export const paintSuperpixel =
 
 const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColor: string,
     defaultOpacity: number, annotatedOpacity: number, defaultLineWidth: number, annotatingOpacity: number, highlightLineWidth: number,
-    onSegmentsUpdated: (...params: any[]) => void, onSelectedTagUpdated: (...params: any[]) => void
+    getCurrentMode: () => ExtendedSelectionMode, onCanvasUpdated: (...params: any[]) => void
     ) => {
-        superpixel.mouseover( () => {
+        superpixel.mouseover( (event: MouseEvent) => {
+            if (event.buttons > 0 || getCurrentMode() === ExtendedSelectionMode.NONE ) { return ; }
             const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
             const currentColor = superpixel.attr().name;
             const fillColor = document.getElementById(canvasId).getAttribute("name")!;
@@ -73,9 +70,10 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                     annotatingTag === AnnotationTag.DEANNOTATING ? defaultColor : fillColor,
                     annotatingTag === AnnotationTag.DEANNOTATING ? defaultOpacity : annotatingOpacity,
                     highlightLineWidth);
-                }  
+                }
             })
-            .mouseout( () => {
+            .mouseout( (event: MouseEvent) => {
+                if (event.buttons > 0 || getCurrentMode() === ExtendedSelectionMode.NONE) { return ; }
                 const annotatingTag = document.getElementById(canvasId).getAttribute("color-profile");
                 const currentColor = superpixel.attr().name;
                 if(annotatingTag !== AnnotationTag.EMPTY){
@@ -87,14 +85,26 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                 }
             })
             .mousemove( (event: MouseEvent) => {
-                paintAndUpdateState(event, superpixel, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+                if ( getCurrentMode() === ExtendedSelectionMode.NONE ) { return ; }
+                const annotatingTag = superpixel.parent().attr()["color-profile"];
+                const fillColor: string = superpixel.parent().attr()["name"];
+                paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth);
             })
             .mousedown( (event: MouseEvent) => {
-                paintAndUpdateState(event, superpixel, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth, onSegmentsUpdated);
+                clicked = true;
+                if ( getCurrentMode() === ExtendedSelectionMode.NONE ) { return ; }
+                const annotatingTag = superpixel.parent().attr()["color-profile"];
+                const fillColor: string = superpixel.parent().attr()["name"];
+                paintAndUpdateState(event, superpixel, annotatingTag, fillColor, defaultColor, defaultOpacity, annotatedOpacity, defaultLineWidth);
+                event.buttons === 2 ? superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": defaultColor})
+                 : superpixel.parent().attr({...superpixel.parent().attr(), "content-script-type": fillColor}) // storing color
             })
             .mouseup( (event: MouseEvent) => {
-                const tag: string = superpixel.attr()["tag"];
-                onSelectedTagUpdated(tag);
+                if (clicked){
+                    const tag: string = superpixel.attr()["tag"];
+                    onCanvasUpdated(tag);
+                }
+                clicked = false;
             }).drag( () => false, ()=>false, ()=>false);
     return superpixel;
 }

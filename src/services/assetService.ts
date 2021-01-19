@@ -88,17 +88,18 @@ export class AssetService {
                 return AssetType.Video;
             case "tfrecord":
                 return AssetType.TFRecord;
-            case "seg":
-                return AssetType.SegmentationData;
             case "json":
                 return AssetType.ImageMetadata;
+            case "svg":
+                return AssetType.SvgImage;
             default:
                 return AssetType.Unknown;
         }
     }
 
     private assetProviderInstance: IAssetProvider;
-    private segmentationDataProviderInstance: IAssetProvider;
+    private metadataImportProviderInstance: IAssetProvider;
+    private metadataExportProviderInstance: IStorageProvider;
     private storageProviderInstance: IStorageProvider;
 
     constructor(private project: IProject) {
@@ -122,14 +123,28 @@ export class AssetService {
     /**
      * Get Asset Provider from project's source connction
      */
-    protected get segmentationDataProvider(): IAssetProvider {
-        if (!this.segmentationDataProviderInstance) {
-            this.segmentationDataProviderInstance = AssetProviderFactory.create(
+    protected get metadataImportProvider(): IAssetProvider {
+        if (!this.metadataImportProviderInstance) {
+            this.metadataImportProviderInstance = AssetProviderFactory.create(
                 this.project.metadataConnection.providerType,
                 this.project.metadataConnection.providerOptions,
             );
 
-            return this.segmentationDataProviderInstance;
+            return this.metadataImportProviderInstance;
+        }
+    }
+
+    /**
+     * Get Asset Provider from project's source connction
+     */
+    protected get metadataExportProvider(): IStorageProvider {
+        if (!this.metadataExportProviderInstance) {
+            this.metadataExportProviderInstance = StorageProviderFactory.create(
+                this.project.metadataConnection.providerType,
+                this.project.metadataConnection.providerOptions,
+            );
+
+            return this.metadataExportProviderInstance;
         }
     }
 
@@ -156,8 +171,9 @@ export class AssetService {
     /**
      * Get segmentation data from provider
      */
-    public async getSegmentationData(): Promise<IAsset[]> {
-        return await this.segmentationDataProvider.getAssets();
+    public async getSvg(): Promise<IAsset[]> {
+        const assets = await this.metadataImportProvider.getAssets();
+        return assets.filter((e) => e.format === 'svg');
     }
 
     /**
@@ -175,6 +191,22 @@ export class AssetService {
             .values(this.project.assets)
             .filter((asset) => asset.parent && asset.parent.id === rootAsset.id)
             .sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    /**
+     * Save metadata for asset
+     * @param metadata - Metadata for asset
+     */
+    public async saveSvg(fileName: string, content: string): Promise<string> {
+        Guard.null(content);
+
+        try {
+            const buf = Buffer.from(content);
+            await this.metadataExportProvider.writeBinary(fileName, buf);
+        } catch (err) {
+            // The file may not exist - that's OK
+        }
+        return fileName;
     }
 
     /**
@@ -220,7 +252,7 @@ export class AssetService {
                     asset: { ...asset },
                     regions: await this.getRegionsFromTFRecord(asset),
                     segments: await this.getSegmentsFromTFRecord(asset),
-                    segmentationData: undefined,
+                    svg: undefined,
                     version: appInfo.version,
                 };
             } else {
@@ -228,7 +260,7 @@ export class AssetService {
                     asset: { ...asset },
                     regions: [],
                     segments: [],
-                    segmentationData: undefined,
+                    svg: undefined,
                     version: appInfo.version,
                 };
             }
