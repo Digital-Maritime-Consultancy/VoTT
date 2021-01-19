@@ -253,6 +253,7 @@ export const korean: IAppStrings = {
             activeLearning: "자동 어노테이션",  // Active Learning"
             annotateSegments: "어노테이션 넣기",
             removeAnnotation: "어노테이션 빼기",
+            showSegBoundary: "세그먼트 가장자리 보기",
         },
         videoPlayer: {
             previousTaggedFrame: {

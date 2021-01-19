@@ -138,12 +138,12 @@ export default class MockFactory {
                     },
                 };
                 break;
-            case AssetType.SegmentationData:
+            case AssetType.ImageMetadata:
                 testAsset = {
-                    id: `segmentation-${name}`,
-                    format: "seg",
-                    name: `segmentationasset-${name}.seg`,
-                    path: `${path}.seg`,
+                    id: `imagemetadata-${name}`,
+                    format: "json",
+                    name: `imagemetadataasset-${name}.json`,
+                    path: `${path}.json`,
                     state: assetState,
                     type: assetType,
                     size: {
@@ -152,12 +152,12 @@ export default class MockFactory {
                     },
                 };
                 break;
-            case AssetType.ImageMetadata:
+            case AssetType.SvgImage:
                 testAsset = {
-                    id: `imagemetadata-${name}`,
-                    format: "json",
-                    name: `imagemetadataasset-${name}.json`,
-                    path: `${path}.json`,
+                    id: `svg-${name}`,
+                    format: "svg",
+                    name: `svg-${name}.svg`,
+                    path: `${path}.svg`,
                     state: assetState,
                     type: assetType,
                     size: {
@@ -215,19 +215,19 @@ export default class MockFactory {
     }
 
     /**
-     * @name Create Segmentation data Asset
-     * @description Creates fake segmentation data IAsset
+     * @name Create Svg asset
+     * @description Creates fake svg IAsset
      * @param name Name of asset
      * @param assetState State of asset
      */
-    public static createSegmentationDataTestAsset(name: string, assetState: AssetState = AssetState.NotVisited): IAsset {
+    public static createSVGTestAsset(name: string, assetState: AssetState = AssetState.NotVisited): IAsset {
         return {
-            id: `segmentation-${name}`,
-            format: "seg",
-            name: `segmentationasset-${name}.seg`,
-            path: encodeFileURI(`C:\\Desktop\\segmentationasset${name}.seg`),
+            id: `svg-${name}`,
+            format: "svg",
+            name: `svg-${name}.svg`,
+            path: encodeFileURI(`C:\\Desktop\\${name}.svg`),
             state: { [EditorContext.Segment]: assetState },
-            type: AssetType.SegmentationData,
+            type: AssetType.SvgImage,
             size: {
                 width: 800,
                 height: 600,
@@ -315,13 +315,13 @@ export default class MockFactory {
      * @param asset Test asset
      */
     public static createTestAssetMetadata(
-        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], metadata?: IImageMetadata, segmentationData?: IAsset): IAssetMetadata {
+        asset?: IAsset, regions?: IRegion[], segments?: ISegment[], svg?: IAsset): IAssetMetadata {
         return {
             asset: asset || MockFactory.createTestAsset(),
             regions: regions || [],
             segments: segments || [],
             version: appInfo.version,
-            segmentationData: segmentationData || MockFactory.createTestAsset("string-seg",AssetState.NotVisited, "", AssetType.SegmentationData),
+            svg: svg || MockFactory.createTestAsset("string-svg", AssetState.NotVisited, "", AssetType.SvgImage),
         };
     }
 
@@ -921,9 +921,10 @@ export default class MockFactory {
             deleteProject: jest.fn(() => Promise.resolve()),
             closeProject: jest.fn(() => Promise.resolve()),
             loadAssets: jest.fn(() => Promise.resolve()),
-            loadSegmentationData: jest.fn(() => Promise.resolve()),
             loadImageMetadata: jest.fn(() => Promise.resolve()),
             saveImageMetadata: jest.fn(() => Promise.resolve()),
+            loadSvg: jest.fn(() => Promise.resolve()),
+            saveSvg: jest.fn(() => Promise.resolve()),
             exportProject: jest.fn(() => Promise.resolve()),
             loadAssetMetadata: jest.fn(() => Promise.resolve()),
             saveAssetMetadata: jest.fn(() => Promise.resolve()),

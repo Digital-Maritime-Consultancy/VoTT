@@ -5,6 +5,8 @@ import Guard from "../../common/guard";
 import { constants } from "../../common/constants";
 import HtmlFileReader from "../../common/htmlFileReader";
 
+import svgToPng from "save-svg-as-png";
+const Snap = require("snapsvg-cjs");
 /**
  * MOAD Json Export Provider options
  */
@@ -14,6 +16,10 @@ export interface IMoadJsonExportProviderOptions extends IExportProviderOptions {
     exportIndividuals: boolean;
     includeSegmentAnnotatedImages: boolean;
 }
+
+const geometryFolderName = "moad-json-export/geometry/";
+const segmentFolderName = "moad-json-export/segmentation/";
+const segmentPngFolderName = "moad-json-export/segmentation/png/";
 
 /**
  * @name - MOAD Json Export Provider
@@ -45,11 +51,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         delete exportObject.metadataConnection;
         delete exportObject.targetConnection;
         delete exportObject.exportFormat;
-
-        if (this.options.includeSegmentAnnotatedImages){
-
-        }
-
+        
         if (this.options.exportIndividuals){
             const assets = exportObject.assets;
             const keys: string[] = [];
@@ -62,12 +64,25 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
 
             assetMetadata.forEach(async (item) => {
                 if( item.regions && item.regions.length) {
-                    const fileName = `moad-json-export/geometry/${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
+                    const fileName = `${geometryFolderName}${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
                     await this.storageProvider.writeText(fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
                 }
                 if( item.segments && item.segments.length) {
-                    const fileName = `moad-json-export/segmentation/${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
+                    const fileName = `${segmentFolderName}${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
                     await this.storageProvider.writeText(fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
+                }
+                if (this.options.includeSegmentAnnotatedImages && item.svg) {
+                    const svgFileName = item.svg.name;
+
+                    const onSVGLoaded = (data) => {
+                        svgToPng.svgAsPngUri(data.node, "", {backgroundColor: "#000000"})
+                            .then((uri: string) => 
+                                this.storageProvider.writeBinary(
+                                    segmentPngFolderName + svgFileName.replace(".svg", "") + ".png",
+                                    Buffer.from(uri.replace("data:image/png;base64,",""),'base64')));
+                    }
+
+                    await Snap.load(item.svg.path, onSVGLoaded);
                 }
             });
         }

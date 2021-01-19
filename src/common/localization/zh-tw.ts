@@ -255,6 +255,7 @@ export const chinesetw: IAppStrings = {
             activeLearning: "主動學習", // Active Learning
             annotateSegments: "Annotate Segments",
             removeAnnotation: "Remove Annotation",
+            showSegBoundary: "Show Segment Boundary",
         },
         videoPlayer: {
             previousTaggedFrame: {

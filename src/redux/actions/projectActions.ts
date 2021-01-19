@@ -29,7 +29,8 @@ export default interface IProjectActions {
     closeProject(): void;
     exportProject(project: IProject): Promise<void> | Promise<IExportResults>;
     loadAssets(project: IProject): Promise<IAsset[]>;
-    loadSegmentationData(project: IProject): Promise<IAsset[]>;
+    loadSvg(project: IProject): Promise<IAsset[]>;
+    saveSvg(project: IProject, fileName: string, content: string): Promise<IAsset[]>;
     loadImageMetadata(project: IProject, filePath: string): Promise<object>;
     saveImageMetadata(project: IProject, filePath: string, content: object): Promise<void>;
     loadAssetMetadata(project: IProject, asset: IAsset): Promise<IAssetMetadata>;
@@ -145,12 +146,24 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
  * Gets metadata from project, dispatches load assets action and returns assets
  * @param project - Project from which to load assets
  */
-export function loadSegmentationData(project: IProject): (dispatch: Dispatch) => Promise<IAsset[]> {
+export function loadSvg(project: IProject): (dispatch: Dispatch) => Promise<object> {
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
-        const assets = await assetService.getSegmentationData();
-        dispatch(loadSegmentationDataAction(assets));
+        const assets = await assetService.getSvg();
+        dispatch(loadSvgAction(assets));
         return assets;
+    };
+}
+
+/**
+ * Gets metadata from project, dispatches load assets action and returns assets
+ * @param project - Project from which to load assets
+ */
+export function saveSvg(project: IProject, fileName: string, content: string): (dispatch: Dispatch) => Promise<void> {
+    return async (dispatch: Dispatch) => {
+        const assetService = new AssetService(project);
+        const svg = await assetService.saveSvg(fileName, content);
+        dispatch(saveSvgAction(svg));
     };
 }
 
@@ -169,7 +182,8 @@ export function loadImageMetadata(project: IProject, filePath: string): (dispatc
  * Gets metadata from project, dispatches load assets action and returns assets
  * @param project - Project from which to load assets
  */
-export function saveImageMetadata(project: IProject, filePath: string, content: object): (dispatch: Dispatch) => Promise<void> {
+export function saveImageMetadata(project: IProject,
+    filePath: string, content: object): (dispatch: Dispatch) => Promise<void> {
     return async (dispatch: Dispatch) => {
         const imageMetadataService = new ImageMetadataService(project);
         return await imageMetadataService.saveImageMetadata(filePath, content);
@@ -333,14 +347,21 @@ export interface ILoadProjectAssetsAction extends IPayloadAction<string, IAsset[
 }
 
 /**
- * Load segmentation data action type
+ * Load svg action type
  */
-export interface ILoadSegmentationDataAction extends IPayloadAction<string, IAsset[]> {
-    type: ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS;
+export interface ILoadSvgAction extends IPayloadAction<string, object> {
+    type: ActionTypes.LOAD_SVG_SUCCESS;
 }
 
 /**
- * Load segmentation data action type
+ * Save svg action type
+ */
+export interface ISaveSvgAction extends IPayloadAction<string, string> {
+    type: ActionTypes.SAVE_SVG_SUCCESS;
+}
+
+/**
+ * Load image metadata action type
  */
 export interface ILoadImageMetadataAction extends IPayloadAction<string, object> {
     type: ActionTypes.LOAD_IMAGE_METADATA_SUCCESS;
@@ -403,10 +424,15 @@ export const deleteProjectAction = createPayloadAction<IDeleteProjectAction>(Act
 export const loadProjectAssetsAction =
     createPayloadAction<ILoadProjectAssetsAction>(ActionTypes.LOAD_PROJECT_ASSETS_SUCCESS);
 /**
- * Instance of Load Metadata action
+ * Instance of Load svg action
  */
-export const loadSegmentationDataAction =
-    createPayloadAction<ILoadSegmentationDataAction>(ActionTypes.LOAD_SEGMENTATION_DATA_SUCCESS);
+export const loadSvgAction =
+    createPayloadAction<ILoadSvgAction>(ActionTypes.LOAD_SVG_SUCCESS);
+/**
+ * Instance of Save svg action
+ */
+export const saveSvgAction =
+    createPayloadAction<ISaveSvgAction>(ActionTypes.SAVE_SVG_SUCCESS);
 /**
  * Instance of Load Metadata action
  */

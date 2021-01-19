@@ -58,7 +58,8 @@ export abstract class ExportProvider
     <TOptions extends IExportProviderOptions = IExportProviderOptions> implements IExportProvider {
     private storageProviderInstance: IStorageProvider;
     private assetProviderInstance: IAssetProvider;
-    private metadataProviderInstance: IAssetProvider;
+    private metadataImportProviderInstance: IAssetProvider;
+    private metadataExportProviderInstance: IStorageProvider;
     private assetService: AssetService;
 
     constructor(public project: IProject, protected options?: TOptions) {
@@ -153,18 +154,34 @@ export abstract class ExportProvider
     }
 
     /**
-     * Gets the asset provider for the current project
+     * Gets the metadata import provider for the current project
      */
-    protected get metadataProvider(): IAssetProvider {
-        if (this.metadataProviderInstance) {
-            return this.metadataProviderInstance;
+    protected get metadataImportProvider(): IAssetProvider {
+        if (this.metadataImportProviderInstance) {
+            return this.metadataImportProviderInstance;
         }
 
-        this.metadataProviderInstance = AssetProviderFactory.create(
+        this.metadataImportProviderInstance = AssetProviderFactory.create(
             this.project.metadataConnection.providerType,
             this.project.metadataConnection.providerOptions,
         );
 
-        return this.metadataProviderInstance;
+        return this.metadataImportProviderInstance;
+    }
+
+    /**
+     * Gets the metadata export provider for the current project
+     */
+    protected get metadataExportProvider(): IStorageProvider {
+        if (this.metadataExportProviderInstance) {
+            return this.metadataExportProviderInstance;
+        }
+
+        this.metadataExportProviderInstance = StorageProviderFactory.create(
+            this.project.metadataConnection.providerType,
+            this.project.metadataConnection.providerOptions,
+        );
+
+        return this.metadataExportProviderInstance;
     }
 }
