@@ -37,12 +37,6 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
     public async export(): Promise<void> {
         const results = await this.getAssetsForExport();
 
-        if (this.options.includeLabelImages) {
-            results.forEachAsync(async (assetMetadata) => {
-                console.log("Export test");
-            });
-        }
-
         const exportObject = { ...this.project };
         exportObject.assets = _.keyBy(results, (assetMetadata) => assetMetadata.asset.id) as any;
 
@@ -51,25 +45,27 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         delete exportObject.metadataConnection;
         delete exportObject.targetConnection;
         delete exportObject.exportFormat;
-        
-        if (this.options.exportIndividuals){
+        if (this.options.exportIndividuals) {
             const assets = exportObject.assets;
             const keys: string[] = [];
             if (keys.length === 0) {
-                for (let k in assets) keys.push(k);
+                for (const k in assets) {
+                    keys.push(k);
+                }
             }
             const assetMetadata: IAssetMetadata[] = [];
-            
             keys.map( (key) => {const d: any = assets[key]; assetMetadata.push(d as IAssetMetadata)});
 
             assetMetadata.forEach(async (item) => {
                 if( item.regions && item.regions.length) {
                     const fileName = `${geometryFolderName}${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
-                    await this.storageProvider.writeText(fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
+                    await this.storageProvider.writeText(
+                        fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
                 }
                 if( item.segments && item.segments.length) {
                     const fileName = `${segmentFolderName}${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
-                    await this.storageProvider.writeText(fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
+                    await this.storageProvider.writeText(
+                        fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
                 }
                 if (this.options.includeSegmentAnnotatedImages && item.svg) {
                     const svgFileName = item.svg.name;
@@ -79,15 +75,14 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
                             .then((uri: string) => 
                                 this.storageProvider.writeBinary(
                                     segmentPngFolderName + svgFileName.replace(".svg", "") + ".png",
-                                    Buffer.from(uri.replace("data:image/png;base64,",""),'base64')));
+                                    Buffer.from(uri.replace("data:image/png;base64,", ""), "base64")));
                     }
-
                     await Snap.load(item.svg.path, onSVGLoaded);
                 }
             });
-        }
-        else{
-            const fileName = `moad-json-export/${this.project.name.replace(/\s/g, "-")}${constants.exportFileExtension}`;
+        } else {
+            const fileName =
+                `moad-json-export/${this.project.name.replace(/\s/g, "-")}${constants.exportFileExtension}`;
             await this.storageProvider.writeText(fileName, JSON.stringify(exportObject, null, 4));
         }
     }
@@ -97,7 +92,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
     }
 
     private segment2PS(segment: ISegment, asset: IAsset){
-        return { 
+        return {
             id: segment.id,
             image_id: asset.id,
             category_id: segment.tag,
@@ -107,7 +102,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             bbox: segment.boundingBox,
             iscrowd: segment.iscrowd,
             risk: segment.risk,
-        }
+        };
     }
 
     private regions2BBPG(regions: IRegion[], asset: IAsset){
@@ -115,7 +110,7 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
     }
 
     private region2BBPG(region: IRegion, asset: IAsset) {
-        return { 
+        return {
             id: region.id,
             image_id: asset.id,
             category_id: region.tag,
@@ -130,6 +125,6 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             isobscured: region.isobscured,
             istruncated: region.istruncated,
             risk: region.risk,
-        }
+        };
     }
 }

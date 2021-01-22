@@ -28,9 +28,9 @@ const formSchemaForSegment = {
                 {const: "caution", title: "주의"},
             ],
             default: "safe",
-        }
-    }
-}
+        },
+    },
+};
 
 const formSchemaForRegion = {
     title: "Annotation property",
@@ -66,8 +66,8 @@ const formSchemaForRegion = {
             ],
             default: "safe",
         },
-    }
-}
+    },
+};
 
 const uiSchema =  {
     tag: {
@@ -87,7 +87,7 @@ const uiSchema =  {
         "ui:widget": "radio",
     },
     risk: {
-        "classNames" : "minimized-control-label",
+        classNames : "minimized-control-label",
     },
 };
 
@@ -121,68 +121,62 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
         onSegmentsUpdated: undefined,
         onSelectedSegmentChanged: undefined,
         onSelectedRegionsChanged: undefined,
-    }
+    };
 
     public state: IPropertyFormState = {
         iscrowd: false,
         formSchema: undefined,
         formData: undefined,
-    }
+    };
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.updateForm = this.updateForm.bind(this);
         this.clearForm = this.clearForm.bind(this);
     }
 
-    public componentDidUpdate(prevProps: IPropertyFormProps){
+    public componentDidUpdate(prevProps: IPropertyFormProps) {
         if (this.props.editorContext !== prevProps.editorContext ) {
             this.clearForm();
         }
-        if (this.props.editorContext === EditorContext.Segment){
-            if (this.props.selectedAssetName !== prevProps.selectedAssetName){
+        if (this.props.editorContext === EditorContext.Segment) {
+            if (this.props.selectedAssetName !== prevProps.selectedAssetName) {
                 this.clearForm();
-            }
-            else if (this.props.selectedSegment){
-                if (!this.state.formData){
+            } else if (this.props.selectedSegment) {
+                if (!this.state.formData) {
                     this.updateForm(undefined, this.props.selectedSegment, formSchemaForSegment);
                 }
-                if(this.props.selectedSegment !== prevProps.selectedSegment){
+                if(this.props.selectedSegment !== prevProps.selectedSegment) {
                     this.updateForm(undefined, this.props.selectedSegment, formSchemaForSegment);
                 }
-            }
-            else if (this.state.formData) {
+            } else if (this.state.formData) {
                 this.clearForm();
             }
-        }
-        else if(this.props.editorContext === EditorContext.Geometry){
-            if (this.props.selectedAssetName !== prevProps.selectedAssetName){
+        } else if (this.props.editorContext === EditorContext.Geometry) {
+            if (this.props.selectedAssetName !== prevProps.selectedAssetName) {
                 this.clearForm();
-            }
-            else if (this.props.selectedRegions && this.props.selectedRegions.length === 1){
-                if (!this.state.formData){
+            } else if (this.props.selectedRegions && this.props.selectedRegions.length === 1) {
+                if (!this.state.formData) {
                     this.updateForm(this.props.selectedRegions, undefined, formSchemaForRegion);
                 }
-                if(this.props.selectedRegions !== prevProps.selectedRegions){
+                if (this.props.selectedRegions !== prevProps.selectedRegions) {
                     this.updateForm(this.props.selectedRegions, undefined, formSchemaForRegion);
                 }
-            }
-            else if (this.props.selectedRegions && this.props.selectedRegions.length === 0 && this.state.formData) {
+            } else if (this.props.selectedRegions && this.props.selectedRegions.length === 0 && this.state.formData) {
                 this.clearForm();
             }
         }
     }
 
-    public clearForm(){
+    public clearForm() {
         this.setState( { formData: undefined } );
     }
 
-    public updateForm(regions: IRegion[], segment: ISegment, formSchema: object){
-        if (regions && regions.length === 1){
+    public updateForm(regions: IRegion[], segment: ISegment, formSchema: object) {
+        if (regions && regions.length === 1) {
             const formData = this.projectRegionIntoFormData(regions[0], formSchema);
             this.setState( { formData } );
-        }
-        else if (segment){
+        } else if (segment) {
             const formData = this.projectSegmentIntoFormData(segment, formSchema);
             this.setState( { formData } );
         }
@@ -207,16 +201,14 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
         );
     }
 
-    private projectRegionIntoFormData(region: IRegion, formSchema: object){
+    private projectRegionIntoFormData(region: IRegion, formSchema: object) {
         const regionAttributes = Object.getOwnPropertyNames(region);
         let projected = {};
-        for (const key in formSchema)
-        {
-            if(key === "properties")
-            {
-                for (const attr in formSchema[key]){
-                    if (regionAttributes.includes(attr)){
-                        if (formSchema[key][attr]["type"] === "boolean"){
+        for (const key in formSchema) {
+            if (key === "properties") {
+                for (const attr in formSchema[key]) {
+                    if (regionAttributes.includes(attr)) {
+                        if (formSchema[key][attr]["type"] === "boolean") {
                             projected = {...projected, [attr]: region[attr] === 1};
                         } else {
                             projected = {...projected, [attr]: region[attr]};
@@ -228,16 +220,14 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
         return projected;
     }
 
-    private projectSegmentIntoFormData(segment: ISegment, formSchema: object){
+    private projectSegmentIntoFormData(segment: ISegment, formSchema: object) {
         const segmentAttributes = Object.getOwnPropertyNames(segment);
         let projected = {};
-        for (const key in formSchema)
-        {
-            if(key === "properties")
-            {
-                for (const attr in formSchema[key]){
-                    if (segmentAttributes.includes(attr)){
-                        if (formSchema[key][attr]["type"] === "boolean"){
+        for (const key in formSchema) {
+            if (key === "properties") {
+                for (const attr in formSchema[key]) {
+                    if (segmentAttributes.includes(attr)) {
+                        if (formSchema[key][attr]["type"] === "boolean") {
                             projected = {...projected, [attr]: segment[attr] === 1};
                         } else {
                             projected = {...projected, [attr]: segment[attr]};
@@ -252,9 +242,9 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
     private projectFormDataIntoSegment = (formData: object, segment: ISegment): ISegment => {
         const segmentAttributes = Object.getOwnPropertyNames(segment);
         let projected = {... segment};
-        for (const attr in formData){
-            if (segmentAttributes.includes(attr)){
-                if (typeof formData[attr] === "boolean"){
+        for (const attr in formData) {
+            if (segmentAttributes.includes(attr)) {
+                if (typeof formData[attr] === "boolean") {
                     projected = {...projected, [attr]: formData[attr] ? 1 : 0};
                 } else {
                     projected = {...projected, [attr]: formData[attr]};
@@ -267,9 +257,9 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
     private projectFormDataIntoRegion = (formData: object, region: IRegion): IRegion => {
         const regionAttributes = Object.getOwnPropertyNames(region);
         let projected = {... region};
-        for (const attr in formData){
-            if (regionAttributes.includes(attr)){
-                if (typeof formData[attr] === "boolean"){
+        for (const attr in formData) {
+            if (regionAttributes.includes(attr)) {
+                if (typeof formData[attr] === "boolean") {
                     projected = {...projected, [attr]: formData[attr] ? 1 : 0};
                 } else {
                     projected = {...projected, [attr]: formData[attr]};
@@ -280,15 +270,14 @@ export default class PropertyForm extends React.Component<IPropertyFormProps, IP
     }
 
     private onFormChange = (changeEvent: IChangeEvent<IPropertyFormProps>) => {
-        if (this.props.editorContext === EditorContext.Segment && this.props.selectedSegment){
+        if (this.props.editorContext === EditorContext.Segment && this.props.selectedSegment) {
             const updated = this.projectFormDataIntoSegment(changeEvent.formData, this.props.selectedSegment);
             if (this.props.onSegmentsUpdated && updated && this.props.onSelectedSegmentChanged) {
                 this.props.onSegmentsUpdated([updated], true);
                 this.props.onSelectedSegmentChanged(updated);
             }
-        }
-        else if (this.props.editorContext === EditorContext.Geometry 
-                && this.props.selectedRegions && this.props.selectedRegions.length === 1){
+        } else if (this.props.editorContext === EditorContext.Geometry
+                && this.props.selectedRegions && this.props.selectedRegions.length === 1) {
             const updated = this.projectFormDataIntoRegion(changeEvent.formData, this.props.selectedRegions[0]);
             if (this.props.onRegionsUpdated && updated && this.props.onSelectedRegionsChanged) {
                 this.props.onRegionsUpdated([updated], true);
