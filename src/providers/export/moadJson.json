@@ -35,6 +35,12 @@
             "default": false,
             "title": "${strings.export.providers.common.properties.includeSegmentAnnotatedImages.title}",
             "description": "${strings.export.providers.common.properties.includeSegmentAnnotatedImages.description}"
+        },
+        "strict": {
+            "type": "boolean",
+            "default": false,
+            "title": "${strings.export.providers.common.properties.strict.title}",
+            "description": "${strings.export.providers.common.properties.strict.description}"
         }
     }
 }

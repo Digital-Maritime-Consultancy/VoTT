@@ -327,7 +327,7 @@ export default class EditorMetadataPage extends React.Component<IEditorPageProps
                 const loadedData = await this.loadImageMetadata(assetMetadata.asset.name);
                 this.setState( {... this.state, formData: loadedData ? loadedData : this.state.formData } );
             } catch (err) {
-                
+                console.warn(err);
             }
         };
 

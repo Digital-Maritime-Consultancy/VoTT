@@ -65,6 +65,7 @@ describe("MOAD Json Export Provider", () => {
             includeLabelImages: false,
             exportIndividuals: false,
             includeSegmentAnnotatedImages: false,
+            strict: false,
         };
         const exportProvider = ExportProviderFactory.create("moadJson", testProject, options);
         expect(exportProvider).not.toBeNull();
@@ -97,6 +98,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -126,6 +128,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -161,6 +164,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -192,6 +196,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -207,6 +212,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);

@@ -337,6 +337,10 @@ export interface IAppStrings {
                         title: string,
                         description: string,
                     },
+                    strict: {
+                        title: string,
+                        description: string,
+                    },
                 },
             },
             vottJson: {

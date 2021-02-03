@@ -1,3 +1,4 @@
+import { projectCanvas } from './../../react/components/pages/editorPage/segment/superpixel-canvas/canvasProjector';
 import _ from "lodash";
 import { ExportProvider } from "./exportProvider";
 import { IProject, IExportProviderOptions, IAssetMetadata, IRegion, IAsset, RegionType, ISegment } from "../../models/applicationState";
@@ -15,6 +16,7 @@ export interface IMoadJsonExportProviderOptions extends IExportProviderOptions {
     includeLabelImages: boolean;
     exportIndividuals: boolean;
     includeSegmentAnnotatedImages: boolean;
+    strict: boolean;
 }
 
 const geometryFolderName = "moad-json-export/geometry/";
@@ -36,6 +38,14 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
      */
     public async export(): Promise<void> {
         const results = await this.getAssetsForExport();
+
+        if (this.options.includeImages) {
+            await results.forEachAsync(async (assetMetadata) => {
+                const arrayBuffer = await HtmlFileReader.getAssetArray(assetMetadata.asset);
+                const assetFilePath = `moad-json-export/${assetMetadata.asset.name}`;
+                await this.storageProvider.writeBinary(assetFilePath, Buffer.from(arrayBuffer));
+            });
+        }
 
         const exportObject = { ...this.project };
         exportObject.assets = _.keyBy(results, (assetMetadata) => assetMetadata.asset.id) as any;
@@ -59,20 +69,28 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             assetMetadata.forEach(async (item) => {
                 if( item.regions && item.regions.length) {
                     const fileName = `${geometryFolderName}${item.asset.name.replace(/\s/g, "-")}_BBPG_data.json`;
-                    await this.storageProvider.writeText(
-                        fileName, JSON.stringify(this.regions2BBPG(item.regions, item.asset), null, 4));
+                    const arrayBuffer = await HtmlFileReader.getAssetArray(item.asset);
+                    const imageFile = Buffer.from(arrayBuffer).toString('base64');
+                    const json = !this.options.strict ?
+                        this.regions2BBPG(item.regions, item.asset, this.options.strict, imageFile,
+                            async (json: object) =>
+                                await this.storageProvider.writeText(fileName, JSON.stringify(json, null, 4)))
+                        : this.regions2BBPG(item.regions, item.asset, this.options.strict, undefined,
+                            async (json: object) =>
+                                await this.storageProvider.writeText(fileName, JSON.stringify(json, null, 4)));
                 }
                 if( item.segments && item.segments.length) {
                     const fileName = `${segmentFolderName}${item.asset.name.replace(/\s/g, "-")}_PS_data.json`;
-                    await this.storageProvider.writeText(
-                        fileName, JSON.stringify(this.segments2PS(item.segments, item.asset), null, 4));
+                    await this.segments2PS(item.segments, item.asset, item.svg, this.options.strict,
+                        async (json: object) => {
+                            await this.storageProvider.writeText(fileName, JSON.stringify(json, null, 4));
+                    });
                 }
                 if (this.options.includeSegmentAnnotatedImages && item.svg) {
                     const svgFileName = item.svg.name;
-
                     const onSVGLoaded = (data) => {
                         svgToPng.svgAsPngUri(data.node, "", {backgroundColor: "#000000"})
-                            .then((uri: string) => 
+                            .then((uri: string) =>
                                 this.storageProvider.writeBinary(
                                     segmentPngFolderName + svgFileName.replace(".svg", "") + ".png",
                                     Buffer.from(uri.replace("data:image/png;base64,", ""), "base64")));
@@ -87,11 +105,31 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         }
     }
 
-    private segments2PS(segments: ISegment[], asset: IAsset){
-        return segments.map( (segment) => this.segment2PS(segment, asset));
+    private async segments2PS(segments: ISegment[], asset: IAsset, svg: IAsset,
+                              strict: boolean = false, callback: (json: object) => void) {
+        if (!strict && svg) {
+            const onSVGLoaded = (data) => {
+                const points = projectCanvas(data, segments);
+                callback(segments.map( (segment, index) => this.segment2PS(segment, svg, points, index)));
+            }
+            await Snap.load(svg.path, onSVGLoaded);
+        } else {
+            callback(segments.map( (segment) => this.segment2PSStrict(segment, asset)));
+        }
     }
 
-    private segment2PS(segment: ISegment, asset: IAsset){
+    private segment2PS(segment: ISegment, svg: IAsset, points: number[][], index: number){
+        return {
+            id: index,
+            isthing: false,
+            category_id: segment.tag,
+            area: segment.area,
+            polygon: points,
+            mask_path: svg.path.replace(".jpg.svg", "_mask.png"),
+        };
+    }
+
+    private segment2PSStrict(segment: ISegment, asset: IAsset){
         return {
             id: segment.id,
             image_id: asset.id,
@@ -105,11 +143,23 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
         };
     }
 
-    private regions2BBPG(regions: IRegion[], asset: IAsset){
-        return regions.map( (region) => this.region2BBPG(region, asset));
+    private regions2BBPG(regions: IRegion[], asset: IAsset, strict: boolean = false,
+                         imageFile: any, callback: (json: object) => void){
+        if (!strict && imageFile) {
+            callback(
+                { version: "4.5.6", flags: {},
+                    shapes: regions.map( (region) => this.region2BBPG(region, asset)),
+                    imagePath: asset.name,
+                    imageData: imageFile,
+                    imageHeight: asset.size.height,
+                    imageWidth: asset.size.width }
+            );
+        } else {
+            callback(regions.map( (region) => this.region2BBPGStrict(region, asset)));
+        }
     }
 
-    private region2BBPG(region: IRegion, asset: IAsset) {
+    private region2BBPGStrict(region: IRegion, asset: IAsset) {
         return {
             id: region.id,
             image_id: asset.id,
@@ -125,6 +175,19 @@ export class MoadJsonExportProvider extends ExportProvider<IMoadJsonExportProvid
             isobscured: region.isobscured,
             istruncated: region.istruncated,
             risk: region.risk,
+        };
+    }
+
+    private region2BBPG(region: IRegion, asset: IAsset) {
+        return {
+            label: region.tag,
+            points : region.points.map( (e) => [e.x, e.y]),
+            group_id: null,
+            shape_type: region.type === RegionType.Rectangle ? "boundingbox" :
+                    region.type === RegionType.Polygon ? "polygon" :
+                    region.type === RegionType.Polyline ? "polyline" :
+                    "etc",
+            flags : {},
         };
     }
 }

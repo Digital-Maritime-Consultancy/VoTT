@@ -347,6 +347,10 @@ export const korean: IAppStrings = {
                         title: "세그먼트 어노테이션 이미지 (PNG) 포함",
                         description: "학습을 위한 세그먼트 어노테이션 이미지 포함할지 여부",
                     },
+                    strict: {
+                        title: "엄격한 규칙 적용",
+                        description: "json 규칙을 엄격하게 적용",
+                    },
                 },
             },
             vottJson: {
