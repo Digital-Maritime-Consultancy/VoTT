@@ -54,7 +54,7 @@ export default class LocalFileSystem implements IStorageProvider {
     }
 
     public makeFolderIfNotExist(containerName: string) {
-        if (containerName && containerName.length){
+        if (containerName && containerName.length)  {
             const exists = fs.existsSync(containerName);
             if (!exists) {
                 const containerNameParent = containerName.slice(0, containerName.lastIndexOf("/"));
@@ -62,8 +62,7 @@ export default class LocalFileSystem implements IStorageProvider {
                 fs.mkdirSync(containerName);
             }
             return ;
-        }
-        else{
+        } else {
             return ;
         }
     }

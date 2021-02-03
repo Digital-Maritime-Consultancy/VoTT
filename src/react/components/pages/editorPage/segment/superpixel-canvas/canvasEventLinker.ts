@@ -80,7 +80,8 @@ const configureSuperpixelEvent = (canvasId: string, superpixel: any, defaultColo
                     const backupColor: string = document.getElementById(canvasId).getAttribute("content-script-type")!;
                     updateSuperpixelSVG(superpixel,
                         backupColor === AnnotationTag.EMPTY ? defaultColor : backupColor,
-                        currentColor === AnnotationTag.EMPTY ? defaultOpacity : annotatedOpacity,
+                        currentColor === AnnotationTag.EMPTY || currentColor === "#000000" || currentColor === "black"
+                        ? defaultOpacity : annotatedOpacity,
                         defaultLineWidth);
                 }
             })

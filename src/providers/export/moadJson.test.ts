@@ -65,6 +65,7 @@ describe("MOAD Json Export Provider", () => {
             includeLabelImages: false,
             exportIndividuals: false,
             includeSegmentAnnotatedImages: false,
+            strict: false,
         };
         const exportProvider = ExportProviderFactory.create("moadJson", testProject, options);
         expect(exportProvider).not.toBeNull();
@@ -97,6 +98,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -126,6 +128,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -139,7 +142,9 @@ describe("MOAD Json Export Provider", () => {
             // WARNING: should be updated
             const exportedAssets = _.values(exportObject.assets);
             const expectedAssets = _.values(testProject.assets)
-                .filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Visited || asset.state[EditorContext.Geometry] === AssetState.Tagged);
+                .filter((asset) =>
+                asset.state[EditorContext.Geometry] === AssetState.Visited ||
+                asset.state[EditorContext.Geometry] === AssetState.Tagged);
 
             // Ensure provider information not included in export JSON
             expect(exportObject.sourceConnection).toBeUndefined();
@@ -159,6 +164,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -169,7 +175,8 @@ describe("MOAD Json Export Provider", () => {
             const exportObject = JSON.parse(exportJson);
 
             const exportedAssets = _.values(exportObject.assets);
-            const expectedAssets = _.values(testProject.assets).filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Tagged);
+            const expectedAssets = _.values(testProject.assets).filter((asset) =>
+                asset.state[EditorContext.Geometry] === AssetState.Tagged);
 
             // Ensure provider information not included in export JSON
             expect(exportObject.sourceConnection).toBeUndefined();
@@ -189,6 +196,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);
@@ -204,6 +212,7 @@ describe("MOAD Json Export Provider", () => {
                 includeLabelImages: false,
                 exportIndividuals: false,
                 includeSegmentAnnotatedImages: false,
+                strict: false,
             };
 
             const exportProvider = new MoadJsonExportProvider(testProject, options);

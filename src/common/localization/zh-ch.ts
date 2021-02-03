@@ -346,6 +346,10 @@ export const chinese: IAppStrings = {
                         title: "Include segment annotation as PNG",
                         description: "Whether or not to include segment annotation image for training",
                     },
+                    strict: {
+                        title: "Strict formatting",
+                        description: "Enforce the MOAD json rule in export",
+                    },
                 },
             },
             vottJson: {

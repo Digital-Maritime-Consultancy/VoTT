@@ -200,7 +200,7 @@ describe("Project Service", () => {
     it("deletes all asset metadata files when project is deleted", async () => {
         const assets = MockFactory.createTestAssets(10);
         assets.forEach((asset) => {
-            asset.state = { [EditorContext.Geometry]: AssetState.Tagged, } ;
+            asset.state = { [EditorContext.Geometry]: AssetState.Tagged } ;
         });
 
         testProject.assets = _.keyBy(assets, (asset) => asset.id);

@@ -219,7 +219,8 @@ describe("Azure Custom Vision Export Provider", () => {
             (testProject.exportFormat.providerOptions as IExportProviderOptions).assetState = ExportAssetState.All;
             const provider = createProvider(testProject);
             const allAssets = await provider.getAssetsForExport();
-            const taggedAssets = _.values(testProject.assets).filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Tagged);
+            const taggedAssets = _.values(testProject.assets).filter((asset) =>
+                asset.state[EditorContext.Geometry] === AssetState.Tagged);
             const results = await provider.export();
 
             expect(results).not.toBeNull();
@@ -235,7 +236,9 @@ describe("Azure Custom Vision Export Provider", () => {
             (testProject.exportFormat.providerOptions as IExportProviderOptions).assetState = ExportAssetState.Visited;
             const visitedAssets = _
                 .values(testProject.assets)
-                .filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Visited || asset.state[EditorContext.Geometry] === AssetState.Tagged);
+                .filter((asset) =>
+                    asset.state[EditorContext.Geometry] === AssetState.Visited ||
+                    asset.state[EditorContext.Geometry] === AssetState.Tagged);
             const taggedAssets = _
                 .values(testProject.assets)
                 .filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Tagged);
@@ -254,7 +257,8 @@ describe("Azure Custom Vision Export Provider", () => {
         // WARNING: should be updated
         it("Uploads binaries, regions & tags for tagged assets", async () => {
             (testProject.exportFormat.providerOptions as IExportProviderOptions).assetState = ExportAssetState.Tagged;
-            const taggedAssets = _.values(testProject.assets).filter((asset) => asset.state[EditorContext.Geometry] === AssetState.Tagged);
+            const taggedAssets = _.values(testProject.assets).filter((asset) =>
+                asset.state[EditorContext.Geometry] === AssetState.Tagged);
             const provider = createProvider(testProject);
             const results = await provider.export();
 

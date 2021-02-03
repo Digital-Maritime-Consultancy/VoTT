@@ -391,6 +391,13 @@ export default class EditorGeometryPage extends React.Component<IEditorPageProps
             return;
         }
 
+        const regionsWithoutArea = assetMetadata.regions.filter((region) => region.area === 0);
+
+        regionsWithoutArea.map( (e) => e.area = e.boundingBox ? e.boundingBox.width * e.boundingBox.height : 1 );
+        const regionsWithoutArea2 = assetMetadata.regions.filter((region) => region.area === 0);
+
+        console.log(regionsWithoutArea2.length);
+
         const initialState = assetMetadata.asset.state[this.state.context];
 
         // The root asset can either be the actual asset being edited (ex: VideoFrame) or the top level / root
