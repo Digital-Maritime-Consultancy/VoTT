@@ -282,7 +282,9 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
     }
 
     private storeSvgFile = (canvasElement: HTMLElement) => {
-        this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasElement) );
+        if (this.state.currentAsset.svg) {
+            this.props.onSaveSvg(this.state.currentAsset.svg.name, getSvgContent(canvasElement) );
+        }
     }
 
     private decomposeSegment = (segments: ISegment[], tags: ITag[]): Annotation[] => {
