@@ -187,10 +187,12 @@ export default class SegmentCanvas extends React.Component<ISegmentCanvasProps, 
                 />
                 <div id="ct-zone" ref={this.canvasZone} className={className} onClick={(e) => e.stopPropagation()}>
                     <div id="selection-zone">
-                        <SuperpixelCanvas id={canvasId} svgName={this.props.svgFileName} 
-                        annotatedData={this.state.annotatedData} 
-                        annotating={this.props.selectedTag} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
-                        getCurrentMode={() => this.props.selectionMode} onCanvasUpdated={this.onCanvasUpdated} />
+                        {this.props.svgFileName ?
+                            <SuperpixelCanvas id={canvasId} svgName={this.props.svgFileName} 
+                            annotatedData={this.state.annotatedData} 
+                            annotating={this.props.selectedTag} defaultColor={this.defaultColor} gridOn={this.state.gridOn}
+                            getCurrentMode={() => this.props.selectionMode} onCanvasUpdated={this.onCanvasUpdated} /> :
+                            <div className={"no-svg-founded"}>ERROR - No SVG file found</div>}                        
                     </div>
                 </div>
                 {this.renderChildren()}
